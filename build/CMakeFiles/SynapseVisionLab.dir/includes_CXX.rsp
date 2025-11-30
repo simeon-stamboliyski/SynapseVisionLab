@@ -1,1 +1,1 @@
--isystem C:/msys64/mingw64/include/QtWidgets -isystem C:/msys64/mingw64/include/QtGui -isystem C:/msys64/mingw64/include/QtCore -isystem "C:/msys64/mingw64/share/qt5/mkspecs/win32-g++"
+-IC:/Users/NimNi/Documents/GitHub/SynapseVisionLab/build/SynapseVisionLab_autogen/include -isystem C:/msys64/mingw64/include/QtWidgets -isystem C:/msys64/mingw64/include/QtGui -isystem C:/msys64/mingw64/include/QtCore -isystem "C:/msys64/mingw64/share/qt5/mkspecs/win32-g++" -isystem C:/msys64/mingw64/include/QtCharts

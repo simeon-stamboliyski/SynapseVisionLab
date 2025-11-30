@@ -1,13 +1,22 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 project(SynapseVisionLab)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# Find Qt5 Widgets
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+# Enable AUTOMOC so Qt's meta-object compiler runs automatically
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
 
-# Add your source file
-add_executable(SynapseVisionLab main.cpp)
+find_package(Qt5 COMPONENTS Widgets Charts REQUIRED)
 
-# Link Qt5 Widgets
-target_link_libraries(SynapseVisionLab Qt5::Widgets)
+add_executable(SynapseVisionLab
+    main.cpp
+    MainWindow.cpp
+    MainWindow.h
+)
+
+target_link_libraries(SynapseVisionLab
+    Qt5::Widgets
+    Qt5::Charts
+)

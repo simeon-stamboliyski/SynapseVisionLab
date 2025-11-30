@@ -68,14 +68,36 @@ include CMakeFiles/SynapseVisionLab.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/SynapseVisionLab.dir/flags.make
 
+SynapseVisionLab_autogen/timestamp: C:/msys64/mingw64/bin/moc.exe
+SynapseVisionLab_autogen/timestamp: C:/msys64/mingw64/bin/uic.exe
+SynapseVisionLab_autogen/timestamp: CMakeFiles/SynapseVisionLab.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Automatic MOC and UIC for target SynapseVisionLab"
+	C:\msys64\mingw64\bin\cmake.exe -E cmake_autogen C:/Users/NimNi/Documents/GitHub/SynapseVisionLab/build/CMakeFiles/SynapseVisionLab_autogen.dir/AutogenInfo.json ""
+	C:\msys64\mingw64\bin\cmake.exe -E touch C:/Users/NimNi/Documents/GitHub/SynapseVisionLab/build/SynapseVisionLab_autogen/timestamp
+
 CMakeFiles/SynapseVisionLab.dir/codegen:
 .PHONY : CMakeFiles/SynapseVisionLab.dir/codegen
+
+CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.obj: CMakeFiles/SynapseVisionLab.dir/flags.make
+CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.obj: CMakeFiles/SynapseVisionLab.dir/includes_CXX.rsp
+CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.obj: SynapseVisionLab_autogen/mocs_compilation.cpp
+CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.obj: CMakeFiles/SynapseVisionLab.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.obj"
+	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.obj -MF CMakeFiles\SynapseVisionLab.dir\SynapseVisionLab_autogen\mocs_compilation.cpp.obj.d -o CMakeFiles\SynapseVisionLab.dir\SynapseVisionLab_autogen\mocs_compilation.cpp.obj -c C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\build\SynapseVisionLab_autogen\mocs_compilation.cpp
+
+CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.i"
+	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\build\SynapseVisionLab_autogen\mocs_compilation.cpp > CMakeFiles\SynapseVisionLab.dir\SynapseVisionLab_autogen\mocs_compilation.cpp.i
+
+CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.s"
+	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\build\SynapseVisionLab_autogen\mocs_compilation.cpp -o CMakeFiles\SynapseVisionLab.dir\SynapseVisionLab_autogen\mocs_compilation.cpp.s
 
 CMakeFiles/SynapseVisionLab.dir/main.cpp.obj: CMakeFiles/SynapseVisionLab.dir/flags.make
 CMakeFiles/SynapseVisionLab.dir/main.cpp.obj: CMakeFiles/SynapseVisionLab.dir/includes_CXX.rsp
 CMakeFiles/SynapseVisionLab.dir/main.cpp.obj: C:/Users/NimNi/Documents/GitHub/SynapseVisionLab/main.cpp
 CMakeFiles/SynapseVisionLab.dir/main.cpp.obj: CMakeFiles/SynapseVisionLab.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/SynapseVisionLab.dir/main.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/SynapseVisionLab.dir/main.cpp.obj"
 	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/SynapseVisionLab.dir/main.cpp.obj -MF CMakeFiles\SynapseVisionLab.dir\main.cpp.obj.d -o CMakeFiles\SynapseVisionLab.dir\main.cpp.obj -c C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\main.cpp
 
 CMakeFiles/SynapseVisionLab.dir/main.cpp.i: cmake_force
@@ -86,22 +108,42 @@ CMakeFiles/SynapseVisionLab.dir/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/SynapseVisionLab.dir/main.cpp.s"
 	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\main.cpp -o CMakeFiles\SynapseVisionLab.dir\main.cpp.s
 
+CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.obj: CMakeFiles/SynapseVisionLab.dir/flags.make
+CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.obj: CMakeFiles/SynapseVisionLab.dir/includes_CXX.rsp
+CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.obj: C:/Users/NimNi/Documents/GitHub/SynapseVisionLab/MainWindow.cpp
+CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.obj: CMakeFiles/SynapseVisionLab.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.obj"
+	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.obj -MF CMakeFiles\SynapseVisionLab.dir\MainWindow.cpp.obj.d -o CMakeFiles\SynapseVisionLab.dir\MainWindow.cpp.obj -c C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\MainWindow.cpp
+
+CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.i"
+	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\MainWindow.cpp > CMakeFiles\SynapseVisionLab.dir\MainWindow.cpp.i
+
+CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.s"
+	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\MainWindow.cpp -o CMakeFiles\SynapseVisionLab.dir\MainWindow.cpp.s
+
 # Object files for target SynapseVisionLab
 SynapseVisionLab_OBJECTS = \
-"CMakeFiles/SynapseVisionLab.dir/main.cpp.obj"
+"CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.obj" \
+"CMakeFiles/SynapseVisionLab.dir/main.cpp.obj" \
+"CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.obj"
 
 # External object files for target SynapseVisionLab
 SynapseVisionLab_EXTERNAL_OBJECTS =
 
+SynapseVisionLab.exe: CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.obj
 SynapseVisionLab.exe: CMakeFiles/SynapseVisionLab.dir/main.cpp.obj
+SynapseVisionLab.exe: CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.obj
 SynapseVisionLab.exe: CMakeFiles/SynapseVisionLab.dir/build.make
+SynapseVisionLab.exe: C:/msys64/mingw64/lib/libQt5Charts.dll.a
 SynapseVisionLab.exe: C:/msys64/mingw64/lib/libQt5Widgets.dll.a
 SynapseVisionLab.exe: C:/msys64/mingw64/lib/libQt5Gui.dll.a
 SynapseVisionLab.exe: C:/msys64/mingw64/lib/libQt5Core.dll.a
 SynapseVisionLab.exe: CMakeFiles/SynapseVisionLab.dir/linkLibs.rsp
 SynapseVisionLab.exe: CMakeFiles/SynapseVisionLab.dir/objects1.rsp
 SynapseVisionLab.exe: CMakeFiles/SynapseVisionLab.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable SynapseVisionLab.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX executable SynapseVisionLab.exe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles\SynapseVisionLab.dir\link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -112,7 +154,7 @@ CMakeFiles/SynapseVisionLab.dir/clean:
 	$(CMAKE_COMMAND) -P CMakeFiles\SynapseVisionLab.dir\cmake_clean.cmake
 .PHONY : CMakeFiles/SynapseVisionLab.dir/clean
 
-CMakeFiles/SynapseVisionLab.dir/depend:
+CMakeFiles/SynapseVisionLab.dir/depend: SynapseVisionLab_autogen/timestamp
 	$(CMAKE_COMMAND) -E cmake_depends "MinGW Makefiles" C:\Users\NimNi\Documents\GitHub\SynapseVisionLab C:\Users\NimNi\Documents\GitHub\SynapseVisionLab C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\build C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\build C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\build\CMakeFiles\SynapseVisionLab.dir\DependInfo.cmake "--color=$(COLOR)" SynapseVisionLab
 .PHONY : CMakeFiles/SynapseVisionLab.dir/depend
 

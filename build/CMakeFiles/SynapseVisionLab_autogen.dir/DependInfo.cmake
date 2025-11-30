@@ -9,9 +9,6 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "" "SynapseVisionLab_autogen/timestamp" "custom" "SynapseVisionLab_autogen/deps"
-  "C:/Users/NimNi/Documents/GitHub/SynapseVisionLab/MainWindow.cpp" "CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.obj" "gcc" "CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.obj.d"
-  "C:/Users/NimNi/Documents/GitHub/SynapseVisionLab/build/SynapseVisionLab_autogen/mocs_compilation.cpp" "CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.obj" "gcc" "CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.obj.d"
-  "C:/Users/NimNi/Documents/GitHub/SynapseVisionLab/main.cpp" "CMakeFiles/SynapseVisionLab.dir/main.cpp.obj" "gcc" "CMakeFiles/SynapseVisionLab.dir/main.cpp.obj.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

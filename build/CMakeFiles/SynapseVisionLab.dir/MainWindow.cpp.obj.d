@@ -1,7 +1,8 @@
-CMakeFiles/SynapseVisionLab.dir/main.cpp.obj: \
- C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\main.cpp \
- C:/msys64/mingw64/include/QtWidgets/QApplication \
- C:/msys64/mingw64/include/QtWidgets/qapplication.h \
+CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.obj: \
+ C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\MainWindow.cpp \
+ C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\MainWindow.h \
+ C:/msys64/mingw64/include/QtWidgets/QMainWindow \
+ C:/msys64/mingw64/include/QtWidgets/qmainwindow.h \
  C:/msys64/mingw64/include/QtWidgets/qtwidgetsglobal.h \
  C:/msys64/mingw64/include/QtGui/qtguiglobal.h \
  C:/msys64/mingw64/include/QtCore/qglobal.h \
@@ -89,12 +90,17 @@ CMakeFiles/SynapseVisionLab.dir/main.cpp.obj: \
  C:/msys64/mingw64/include/QtCore/qversiontagging.h \
  C:/msys64/mingw64/include/QtGui/qtgui-config.h \
  C:/msys64/mingw64/include/QtWidgets/qtwidgets-config.h \
- C:/msys64/mingw64/include/QtCore/qcoreapplication.h \
+ C:/msys64/mingw64/include/QtWidgets/qwidget.h \
+ C:/msys64/mingw64/include/QtGui/qwindowdefs.h \
+ C:/msys64/mingw64/include/QtCore/qobjectdefs.h \
+ C:/msys64/mingw64/include/QtCore/qnamespace.h \
+ C:/msys64/mingw64/include/QtCore/qobjectdefs_impl.h \
+ C:/msys64/mingw64/include/QtGui/qwindowdefs_win.h \
+ C:/msys64/mingw64/include/QtCore/qobject.h \
  C:/msys64/mingw64/include/QtCore/qstring.h \
  C:/msys64/mingw64/include/QtCore/qchar.h \
  C:/msys64/mingw64/include/QtCore/qbytearray.h \
  C:/msys64/mingw64/include/QtCore/qrefcount.h \
- C:/msys64/mingw64/include/QtCore/qnamespace.h \
  C:/msys64/mingw64/include/QtCore/qarraydata.h \
  C:/msys64/mingw64/include/string.h \
  C:/msys64/mingw64/include/sec_api/string_s.h \
@@ -185,9 +191,6 @@ CMakeFiles/SynapseVisionLab.dir/main.cpp.obj: \
  C:/msys64/mingw64/include/QtCore/qstringliteral.h \
  C:/msys64/mingw64/include/QtCore/qstringalgorithms.h \
  C:/msys64/mingw64/include/QtCore/qstringview.h \
- C:/msys64/mingw64/include/QtCore/qobject.h \
- C:/msys64/mingw64/include/QtCore/qobjectdefs.h \
- C:/msys64/mingw64/include/QtCore/qobjectdefs_impl.h \
  C:/msys64/mingw64/include/QtCore/qlist.h \
  C:/msys64/mingw64/include/QtCore/qalgorithms.h \
  C:/msys64/mingw64/include/QtCore/qiterator.h \
@@ -248,29 +251,11 @@ CMakeFiles/SynapseVisionLab.dir/main.cpp.obj: \
  C:/msys64/mingw64/include/c++/15.2.0/limits \
  C:/msys64/mingw64/include/c++/15.2.0/ctime \
  C:/msys64/mingw64/include/c++/15.2.0/bits/parse_numbers.h \
- C:/msys64/mingw64/include/QtCore/qcoreevent.h \
- C:/msys64/mingw64/include/QtCore/qeventloop.h \
- C:/msys64/mingw64/include/QtGui/qwindowdefs.h \
- C:/msys64/mingw64/include/QtGui/qwindowdefs_win.h \
- C:/msys64/mingw64/include/QtCore/qpoint.h \
- C:/msys64/mingw64/include/QtCore/qsize.h \
  C:/msys64/mingw64/include/QtCore/qmargins.h \
- C:/msys64/mingw64/include/QtGui/qcursor.h \
- C:/msys64/mingw64/include/QtGui/qguiapplication.h \
- C:/msys64/mingw64/include/QtGui/qinputmethod.h \
- C:/msys64/mingw64/include/QtCore/qlocale.h \
- C:/msys64/mingw64/include/QtCore/qvariant.h \
- C:/msys64/mingw64/include/QtCore/qmap.h \
- C:/msys64/mingw64/include/QtCore/qhash.h \
- C:/msys64/mingw64/include/c++/15.2.0/variant \
- C:/msys64/mingw64/include/c++/15.2.0/bits/monostate.h \
- C:/msys64/mingw64/include/QtCore/qshareddata.h \
- C:\Users\NimNi\Documents\GitHub\SynapseVisionLab\MainWindow.h \
- C:/msys64/mingw64/include/QtWidgets/QMainWindow \
- C:/msys64/mingw64/include/QtWidgets/qmainwindow.h \
- C:/msys64/mingw64/include/QtWidgets/qwidget.h \
  C:/msys64/mingw64/include/QtGui/qpaintdevice.h \
  C:/msys64/mingw64/include/QtCore/qrect.h \
+ C:/msys64/mingw64/include/QtCore/qsize.h \
+ C:/msys64/mingw64/include/QtCore/qpoint.h \
  C:/msys64/mingw64/include/QtGui/qpalette.h \
  C:/msys64/mingw64/include/QtGui/qcolor.h \
  C:/msys64/mingw64/include/QtGui/qrgb.h \
@@ -287,11 +272,14 @@ CMakeFiles/SynapseVisionLab.dir/main.cpp.obj: \
  C:/msys64/mingw64/include/QtGui/qpixelformat.h \
  C:/msys64/mingw64/include/QtGui/qpixmap.h \
  C:/msys64/mingw64/include/QtCore/qsharedpointer.h \
+ C:/msys64/mingw64/include/QtCore/qshareddata.h \
+ C:/msys64/mingw64/include/QtCore/qhash.h \
  C:/msys64/mingw64/include/QtCore/qsharedpointer_impl.h \
  C:/msys64/mingw64/include/QtGui/qfont.h \
  C:/msys64/mingw64/include/QtGui/qfontmetrics.h \
  C:/msys64/mingw64/include/QtGui/qfontinfo.h \
  C:/msys64/mingw64/include/QtWidgets/qsizepolicy.h \
+ C:/msys64/mingw64/include/QtGui/qcursor.h \
  C:/msys64/mingw64/include/QtGui/qkeysequence.h \
  C:/msys64/mingw64/include/QtWidgets/qtabwidget.h \
  C:/msys64/mingw64/include/QtGui/qicon.h \
@@ -309,6 +297,9 @@ CMakeFiles/SynapseVisionLab.dir/main.cpp.obj: \
  C:/msys64/mingw64/include/QtGui/qfont.h \
  C:/msys64/mingw64/include/QtCore/QVariant \
  C:/msys64/mingw64/include/QtCore/qvariant.h \
+ C:/msys64/mingw64/include/QtCore/qmap.h \
+ C:/msys64/mingw64/include/c++/15.2.0/variant \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/monostate.h \
  C:/msys64/mingw64/include/QtCharts/QAbstractSeries \
  C:/msys64/mingw64/include/QtCharts/qabstractseries.h \
  C:/msys64/mingw64/include/QtCore/QObject \
@@ -321,6 +312,8 @@ CMakeFiles/SynapseVisionLab.dir/main.cpp.obj: \
  C:/msys64/mingw64/include/QtWidgets/qgraphicswidget.h \
  C:/msys64/mingw64/include/QtWidgets/qgraphicslayoutitem.h \
  C:/msys64/mingw64/include/QtGui/qevent.h \
+ C:/msys64/mingw64/include/QtCore/qcoreevent.h \
+ C:/msys64/mingw64/include/QtCore/qvariant.h \
  C:/msys64/mingw64/include/QtCore/qset.h \
  C:/msys64/mingw64/include/QtCore/qurl.h \
  C:/msys64/mingw64/include/QtCore/qfile.h \
@@ -345,4 +338,21 @@ CMakeFiles/SynapseVisionLab.dir/main.cpp.obj: \
  C:/msys64/mingw64/include/QtCharts/QLineSeries \
  C:/msys64/mingw64/include/QtCharts/qlineseries.h \
  C:/msys64/mingw64/include/QtCharts/QXYSeries \
- C:/msys64/mingw64/include/QtCharts/qxyseries.h
+ C:/msys64/mingw64/include/QtCharts/qxyseries.h \
+ C:/msys64/mingw64/include/c++/15.2.0/cmath \
+ C:/msys64/mingw64/include/math.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/specfun.h \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/gamma.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/special_function_util.h \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/bessel_function.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/beta_function.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/ell_integral.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/exp_integral.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/hypergeometric.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/legendre_function.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/modified_bessel_func.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/poly_hermite.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/poly_laguerre.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/riemann_zeta.tcc \
+ C:/msys64/mingw64/include/QtCharts/QValueAxis \
+ C:/msys64/mingw64/include/QtCharts/qvalueaxis.h

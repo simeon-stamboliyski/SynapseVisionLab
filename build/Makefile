@@ -128,6 +128,80 @@ SynapseVisionLab/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\SynapseVisionLab.dir\build.make CMakeFiles/SynapseVisionLab.dir/build
 .PHONY : SynapseVisionLab/fast
 
+#=============================================================================
+# Target rules for targets named SynapseVisionLab_autogen_timestamp_deps
+
+# Build rule for target.
+SynapseVisionLab_autogen_timestamp_deps: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 SynapseVisionLab_autogen_timestamp_deps
+.PHONY : SynapseVisionLab_autogen_timestamp_deps
+
+# fast build rule for target.
+SynapseVisionLab_autogen_timestamp_deps/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SynapseVisionLab_autogen_timestamp_deps.dir\build.make CMakeFiles/SynapseVisionLab_autogen_timestamp_deps.dir/build
+.PHONY : SynapseVisionLab_autogen_timestamp_deps/fast
+
+#=============================================================================
+# Target rules for targets named SynapseVisionLab_autogen
+
+# Build rule for target.
+SynapseVisionLab_autogen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 SynapseVisionLab_autogen
+.PHONY : SynapseVisionLab_autogen
+
+# fast build rule for target.
+SynapseVisionLab_autogen/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SynapseVisionLab_autogen.dir\build.make CMakeFiles/SynapseVisionLab_autogen.dir/build
+.PHONY : SynapseVisionLab_autogen/fast
+
+MainWindow.obj: MainWindow.cpp.obj
+.PHONY : MainWindow.obj
+
+# target to build an object file
+MainWindow.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SynapseVisionLab.dir\build.make CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.obj
+.PHONY : MainWindow.cpp.obj
+
+MainWindow.i: MainWindow.cpp.i
+.PHONY : MainWindow.i
+
+# target to preprocess a source file
+MainWindow.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SynapseVisionLab.dir\build.make CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.i
+.PHONY : MainWindow.cpp.i
+
+MainWindow.s: MainWindow.cpp.s
+.PHONY : MainWindow.s
+
+# target to generate assembly for a file
+MainWindow.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SynapseVisionLab.dir\build.make CMakeFiles/SynapseVisionLab.dir/MainWindow.cpp.s
+.PHONY : MainWindow.cpp.s
+
+SynapseVisionLab_autogen/mocs_compilation.obj: SynapseVisionLab_autogen/mocs_compilation.cpp.obj
+.PHONY : SynapseVisionLab_autogen/mocs_compilation.obj
+
+# target to build an object file
+SynapseVisionLab_autogen/mocs_compilation.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SynapseVisionLab.dir\build.make CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.obj
+.PHONY : SynapseVisionLab_autogen/mocs_compilation.cpp.obj
+
+SynapseVisionLab_autogen/mocs_compilation.i: SynapseVisionLab_autogen/mocs_compilation.cpp.i
+.PHONY : SynapseVisionLab_autogen/mocs_compilation.i
+
+# target to preprocess a source file
+SynapseVisionLab_autogen/mocs_compilation.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SynapseVisionLab.dir\build.make CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.i
+.PHONY : SynapseVisionLab_autogen/mocs_compilation.cpp.i
+
+SynapseVisionLab_autogen/mocs_compilation.s: SynapseVisionLab_autogen/mocs_compilation.cpp.s
+.PHONY : SynapseVisionLab_autogen/mocs_compilation.s
+
+# target to generate assembly for a file
+SynapseVisionLab_autogen/mocs_compilation.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SynapseVisionLab.dir\build.make CMakeFiles/SynapseVisionLab.dir/SynapseVisionLab_autogen/mocs_compilation.cpp.s
+.PHONY : SynapseVisionLab_autogen/mocs_compilation.cpp.s
+
 main.obj: main.cpp.obj
 .PHONY : main.obj
 
@@ -160,7 +234,15 @@ help:
 	@echo ... depend
 	@echo ... edit_cache
 	@echo ... rebuild_cache
+	@echo ... SynapseVisionLab_autogen
+	@echo ... SynapseVisionLab_autogen_timestamp_deps
 	@echo ... SynapseVisionLab
+	@echo ... MainWindow.obj
+	@echo ... MainWindow.i
+	@echo ... MainWindow.s
+	@echo ... SynapseVisionLab_autogen/mocs_compilation.obj
+	@echo ... SynapseVisionLab_autogen/mocs_compilation.i
+	@echo ... SynapseVisionLab_autogen/mocs_compilation.s
 	@echo ... main.obj
 	@echo ... main.i
 	@echo ... main.s
