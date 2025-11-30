@@ -1,1 +1,1 @@
-# NeuroScope
+# SynapseVisionLab
