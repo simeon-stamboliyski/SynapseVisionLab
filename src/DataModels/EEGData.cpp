@@ -1,5 +1,6 @@
 #include "EEGData.h"
 #include "EEGFileHandler.h"
+#include "SignalProcessor.h"  
 #include <QDebug>
 #include <cmath>
 #include <algorithm>
@@ -13,7 +14,6 @@ EEGData::EEGData(QObject *parent) : QObject(parent) {
 EEGData::~EEGData() {
     clear();
 }
-
 
 bool EEGData::loadFromFile(const QString &filePath) {
     clear();
@@ -65,14 +65,6 @@ double EEGData::duration() const {
     }
     return maxDuration;
 }
-
-
-#include "EEGData.h"
-#include "EEGFileHandler.h"
-#include "SignalProcessor.h"  // Add this include
-#include <QDebug>
-
-// ... other methods remain the same ...
 
 void EEGData::normalizeChannel(int channelIndex) {
     if (channelIndex < 0 || channelIndex >= m_channels.size()) return;
@@ -194,8 +186,6 @@ void EEGData::applyNotchFilter(int channelIndex, double notchFreq) {
     
     emit dataChanged();
 }
-
-
 
 bool EEGData::isEmpty() const {
     return m_channels.isEmpty();

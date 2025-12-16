@@ -70,6 +70,8 @@ public:
     QDateTime startDateTime() const { return m_startDateTime; }
     void setStartDateTime(const QDateTime &dt) { m_startDateTime = dt; }
 
+    void applyMontage(SignalProcessor::MontageType montage);
+    void applyNotchFilter(int channelIndex, double notchFreq);
 signals:
     void dataChanged();
     void channelAdded(int index);

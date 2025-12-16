@@ -6,6 +6,7 @@
 #include <QKeyEvent>
 #include <QDebug>
 #include <cmath>
+#include <QWarning>
 
 EEGChartView::EEGChartView(QWidget *parent) 
     : QChartView(parent), 
@@ -124,8 +125,13 @@ void EEGChartView::updateChart() {
     }
     
     // Update axes
-    QValueAxis *axisX = static_cast<QValueAxis*>(m_chart->axisX());
-    QValueAxis *axisY = static_cast<QValueAxis*>(m_chart->axisY());
+    QValueAxis *axisX = qobject_cast<QValueAxis*>(m_chart->axisX());
+    QValueAxis *axisY = qobject_cast<QValueAxis*>(m_chart->axisY());
+    
+    if (!axisX || !axisY) {
+        qWarning() << "Failed to get chart axes";
+        return;
+    }
     
     axisX->setRange(m_startTime, m_startTime + m_duration);
     

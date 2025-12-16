@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include <QCoreApplication>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QHBoxLayout>
@@ -48,34 +49,29 @@ MainWindow::~MainWindow() {
 
 void MainWindow::createActions() {
     // File actions
-    m_actOpen = new QAction(QIcon(":/icons/open.png"), "&Open...", this);
+    m_actOpen = new QAction("&Open...", this);  // CHANGED LINE 51
     m_actOpen->setShortcut(QKeySequence::Open);
     m_actOpen->setStatusTip("Open EEG data file");
     connect(m_actOpen, &QAction::triggered, this, &MainWindow::onFileOpen);
     
-    m_actSave = new QAction(QIcon(":/icons/save.png"), "&Save", this);
+    m_actSave = new QAction("&Save", this);  // CHANGED LINE 56
     m_actSave->setShortcut(QKeySequence::Save);
     m_actSave->setStatusTip("Save EEG data");
     connect(m_actSave, &QAction::triggered, this, &MainWindow::onFileSave);
     
-    m_actSaveAs = new QAction(QIcon(":/icons/saveas.png"), "Save &As...", this);
+    m_actSaveAs = new QAction("Save &As...", this);  // CHANGED LINE 61
     m_actSaveAs->setShortcut(QKeySequence::SaveAs);
     m_actSaveAs->setStatusTip("Save EEG data as...");
     connect(m_actSaveAs, &QAction::triggered, this, &MainWindow::onFileSaveAs);
     
-    m_actExit = new QAction("E&xit", this);
-    m_actExit->setShortcut(QKeySequence::Quit);
-    m_actExit->setStatusTip("Exit application");
-    connect(m_actExit, &QAction::triggered, this, &MainWindow::close);
-    
     // View actions
-    m_actShowGrid = new QAction(QIcon(":/icons/grid.png"), "&Show Grid", this);
+    m_actShowGrid = new QAction("&Show Grid", this);  // CHANGED LINE 71
     m_actShowGrid->setCheckable(true);
     m_actShowGrid->setChecked(true);
     m_actShowGrid->setStatusTip("Toggle grid display");
     connect(m_actShowGrid, &QAction::toggled, m_chartView, &EEGChartView::setShowGrid);
     
-    m_actZoomIn = new QAction(QIcon(":/icons/zoom_in.png"), "Zoom &In", this);
+    m_actZoomIn = new QAction("Zoom &In", this);  // CHANGED LINE 77
     m_actZoomIn->setShortcut(QKeySequence::ZoomIn);
     m_actZoomIn->setStatusTip("Zoom in");
     connect(m_actZoomIn, &QAction::triggered, [this]() {
@@ -83,7 +79,7 @@ void MainWindow::createActions() {
                                   m_chartView->currentDuration() * 0.8);
     });
     
-    m_actZoomOut = new QAction(QIcon(":/icons/zoom_out.png"), "Zoom &Out", this);
+    m_actZoomOut = new QAction("Zoom &Out", this);  // CHANGED LINE 84
     m_actZoomOut->setShortcut(QKeySequence::ZoomOut);
     m_actZoomOut->setStatusTip("Zoom out");
     connect(m_actZoomOut, &QAction::triggered, [this]() {
@@ -91,7 +87,7 @@ void MainWindow::createActions() {
                                   m_chartView->currentDuration() * 1.25);
     });
     
-    m_actPanLeft = new QAction(QIcon(":/icons/left.png"), "Pan &Left", this);
+    m_actPanLeft = new QAction("Pan &Left", this);  // CHANGED LINE 91
     m_actPanLeft->setShortcut(Qt::Key_Left);
     m_actPanLeft->setStatusTip("Pan left");
     connect(m_actPanLeft, &QAction::triggered, [this]() {
@@ -99,7 +95,7 @@ void MainWindow::createActions() {
         m_chartView->setTimeRange(m_chartView->currentStartTime() - duration * 0.1, duration);
     });
     
-    m_actPanRight = new QAction(QIcon(":/icons/right.png"), "Pan &Right", this);
+    m_actPanRight = new QAction("Pan &Right", this);  // CHANGED LINE 98
     m_actPanRight->setShortcut(Qt::Key_Right);
     m_actPanRight->setStatusTip("Pan right");
     connect(m_actPanRight, &QAction::triggered, [this]() {
@@ -108,14 +104,10 @@ void MainWindow::createActions() {
     });
     
     // Tools actions
-    m_actStatistics = new QAction(QIcon(":/icons/stats.png"), "&Statistics", this);
+    m_actStatistics = new QAction("&Statistics", this);  // CHANGED LINE 106
     m_actStatistics->setStatusTip("Show channel statistics");
     connect(m_actStatistics, &QAction::triggered, this, &MainWindow::onShowStatistics);
-    
-    // Help actions
-    m_actAbout = new QAction("&About", this);
-    m_actAbout->setStatusTip("About EEG Data Processor");
-    connect(m_actAbout, &QAction::triggered, this, &MainWindow::onShowAbout);
+
 }
 
 void MainWindow::createMenus() {
