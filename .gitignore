@@ -1,16 +1,44 @@
-"# Build directories" 
-"build/" 
-"*/build/" 
-"CMakeFiles/" 
-"CMakeCache.txt" 
-"cmake_install.cmake" 
-"Makefile" 
-"*.sln" 
-"*.vcxproj" 
-"*.vcxproj.filters" 
-"*.vcxproj.user" 
-"x64/" 
-"Debug/" 
-"Release/" 
-".vs/" 
-"*.user" 
+# Build directories
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+x64/
+Debug/
+Release/
+RelWithDebInfo/
+MinSizeRel/
+.vs/
+*.user
+*.suo
+*.opensdf
+*.sdf
+*.db
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Qt specific
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+*.moc
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS generated
+.DS_Store
+Thumbs.db
