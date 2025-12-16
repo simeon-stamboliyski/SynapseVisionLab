@@ -63,6 +63,11 @@ void MainWindow::createActions() {
     m_actSaveAs->setShortcut(QKeySequence::SaveAs);
     m_actSaveAs->setStatusTip("Save EEG data as...");
     connect(m_actSaveAs, &QAction::triggered, this, &MainWindow::onFileSaveAs);
+
+    m_actExit = new QAction("E&xit", this);
+    m_actExit->setShortcut(QKeySequence::Quit);
+    m_actExit->setStatusTip("Exit application");
+    connect(m_actExit, &QAction::triggered, this, &MainWindow::onFileExit);
     
     // View actions
     m_actShowGrid = new QAction("&Show Grid", this);  // CHANGED LINE 71
@@ -107,6 +112,10 @@ void MainWindow::createActions() {
     m_actStatistics = new QAction("&Statistics", this);  // CHANGED LINE 106
     m_actStatistics->setStatusTip("Show channel statistics");
     connect(m_actStatistics, &QAction::triggered, this, &MainWindow::onShowStatistics);
+
+    m_actAbout = new QAction("&About", this);
+    m_actAbout->setStatusTip("About EEG Data Processor");
+    connect(m_actAbout, &QAction::triggered, this, &MainWindow::onShowAbout);
 
 }
 
@@ -655,4 +664,18 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     } else {
         event->accept();
     }
+}
+
+void MainWindow::onFileExit() {
+    close(); 
+}
+
+void MainWindow::onChannelSelected() {
+    // For now, empty implementation:
+    Q_UNUSED(this);
+}
+
+void MainWindow::applySignalProcessing() {
+    // Empty placeholder or implement as needed
+    Q_UNUSED(this);
 }

@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <QChartView>
 #include <QtCharts>
-#include "EEGData.h"
+#include "../DataModels/EEGData.h"
 
 QT_CHARTS_USE_NAMESPACE
 

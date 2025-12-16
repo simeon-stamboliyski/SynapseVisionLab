@@ -11,16 +11,16 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets Charts REQUIRED)
 
 add_executable(SynapseVisionLab
-    main.cpp
-    MainWindow.cpp
-    MainWindow.h
-    EEGChartView.cpp
-    EEGChartView.h
-    EEGData.cpp
-    EEGData.h
-    EEGFileHandler.cpp
-    EEGFileHandler.h
-    SignalProcessor.h
+    src/main.cpp
+    src/MainWindow/MainWindow.cpp
+    src/Visualization/EEGChartView.cpp
+    src/DataModels/EEGData.cpp
+    src/FileHandlers/EEGFileHandler.cpp
+    src/MainWindow/MainWindow.h
+    src/Visualization/EEGChartView.h
+    src/DataModels/EEGData.h
+    src/FileHandlers/EEGFileHandler.h
+    src/Utils/SignalProcessor.h
 )
 
 target_link_libraries(SynapseVisionLab
@@ -29,8 +29,14 @@ target_link_libraries(SynapseVisionLab
     Qt5::Core
 )
 
-# Add include directory for Qt Charts
+# CRITICAL: Add ALL source directories to include path
 target_include_directories(SynapseVisionLab PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MainWindow
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Visualization
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/DataModels
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/FileHandlers
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Utils
     ${Qt5Charts_INCLUDE_DIRS}
 )

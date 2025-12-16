@@ -6,7 +6,6 @@
 #include <QKeyEvent>
 #include <QDebug>
 #include <cmath>
-#include <QWarning>
 
 EEGChartView::EEGChartView(QWidget *parent) 
     : QChartView(parent), 
@@ -119,14 +118,14 @@ void EEGChartView::updateChart() {
             m_series.append(series);
             m_chart->addSeries(series);
             
-            series->attachAxis(m_chart->axisX());
-            series->attachAxis(m_chart->axisY());
+            series->attachAxis(m_chart->axisX(series));
+            series->attachAxis(m_chart->axisY(series));
         }
     }
     
     // Update axes
-    QValueAxis *axisX = qobject_cast<QValueAxis*>(m_chart->axisX());
-    QValueAxis *axisY = qobject_cast<QValueAxis*>(m_chart->axisY());
+    QValueAxis *axisX = qobject_cast<QValueAxis*>(m_chart->axisX(nullptr));
+    QValueAxis *axisY = qobject_cast<QValueAxis*>(m_chart->axisY(nullptr));
     
     if (!axisX || !axisY) {
         qWarning() << "Failed to get chart axes";
@@ -174,8 +173,8 @@ void EEGChartView::setOffsetScale(double offset) {
 
 void EEGChartView::setShowGrid(bool show) {
     m_showGrid = show;
-    QValueAxis *axisX = static_cast<QValueAxis*>(m_chart->axisX());
-    QValueAxis *axisY = static_cast<QValueAxis*>(m_chart->axisY());
+    QValueAxis *axisX = static_cast<QValueAxis*>(m_chart->axisX(nullptr));
+    QValueAxis *axisY = static_cast<QValueAxis*>(m_chart->axisY(nullptr));
     axisX->setGridLineVisible(show);
     axisY->setGridLineVisible(show);
     m_chart->update();
@@ -222,7 +221,7 @@ void EEGChartView::mouseMoveEvent(QMouseEvent *event) {
     if (m_isPanning) {
         QPoint delta = event->pos() - m_lastMousePos;
         QRectF plotArea = m_chart->plotArea();
-        QValueAxis *axisX = static_cast<QValueAxis*>(m_chart->axisX());
+        QValueAxis *axisX = static_cast<QValueAxis*>(m_chart->axisX(nullptr));
         
         double xRange = axisX->max() - axisX->min();
         double dx = -delta.x() * xRange / plotArea.width();

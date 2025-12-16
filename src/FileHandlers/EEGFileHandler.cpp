@@ -1,5 +1,5 @@
 #include "EEGFileHandler.h"
-#include "EEGData.h"
+#include "../DataModels/EEGData.h"
 #include <QFile>
 #include <QFileInfo>
 #include <QTextStream>

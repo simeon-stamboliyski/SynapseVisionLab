@@ -3,6 +3,7 @@
 #include <QVector>
 #include <QString>
 #include <QDateTime>
+#include "../Utils/SignalProcessor.h"
 
 struct EEGChannel {
     QString label;

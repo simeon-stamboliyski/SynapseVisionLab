@@ -1,3 +1,0 @@
-C:\msys64\mingw64\bin\cmake.exe -E rm -f CMakeFiles\SynapseVisionLab.dir/objects.a
-C:\msys64\mingw64\bin\ar.exe qc CMakeFiles\SynapseVisionLab.dir/objects.a @CMakeFiles\SynapseVisionLab.dir\objects1.rsp
-C:\msys64\mingw64\bin\c++.exe -Wl,--whole-archive CMakeFiles\SynapseVisionLab.dir/objects.a -Wl,--no-whole-archive -o SynapseVisionLab.exe -Wl,--out-implib,libSynapseVisionLab.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\SynapseVisionLab.dir\linkLibs.rsp

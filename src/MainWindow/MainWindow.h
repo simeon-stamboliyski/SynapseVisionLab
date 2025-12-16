@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QCloseEvent>
 #include <QAction>
 #include <QMenu>
 #include <QToolBar>
@@ -13,8 +14,8 @@
 #include <QComboBox>
 #include <QLabel>
 #include <QProgressBar>
-#include "EEGData.h"
-#include "EEGChartView.h"
+#include "../DataModels/EEGData.h"
+#include "../Visualization/EEGChartView.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -22,6 +23,9 @@ class MainWindow : public QMainWindow {
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
     
 private slots:
     void onFileOpen();

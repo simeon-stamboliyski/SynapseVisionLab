@@ -1,6 +1,6 @@
 #include "EEGData.h"
-#include "EEGFileHandler.h"
-#include "SignalProcessor.h"  
+#include "../FileHandlers/EEGFileHandler.h"
+#include "../Utils/SignalProcessor.h"
 #include <QDebug>
 #include <cmath>
 #include <algorithm>
@@ -185,8 +185,4 @@ void EEGData::applyNotchFilter(int channelIndex, double notchFreq) {
     SignalProcessor::notchFilter(channel.data, channel.samplingRate, notchFreq);
     
     emit dataChanged();
-}
-
-bool EEGData::isEmpty() const {
-    return m_channels.isEmpty();
 }
