@@ -5,7 +5,12 @@
 #include <QTextStream>
 #include <QDebug>
 #include <QDateTime>
+#include <QDataStream>     
+#include <QString>
+#include <QSysInfo>
 #include <cmath>
+#include <algorithm> 
+#include <numeric>
 
 namespace EEGFileHandler {
 
@@ -35,6 +40,8 @@ bool saveFile(const QString &filePath, const EEGData &data) {
     return saveCSV(filePath, data);
 }
 
+
+
 // ================== EDF LOADER ==================
 
 static bool loadEDF(const QString &filePath, EEGData &data) {
@@ -44,42 +51,337 @@ static bool loadEDF(const QString &filePath, EEGData &data) {
         return false;
     }
     
-    // Simple EDF parser - creates dummy data for now
-    // You can expand this with real EDF parsing later
+    QDataStream stream(&file);
+    stream.setByteOrder(QDataStream::LittleEndian);
     
+    // ===== READ HEADER =====
+    char header[256];
+    if (stream.readRawData(header, 256) != 256) {
+        qWarning() << "Failed to read EDF header";
+        file.close();
+        return false;
+    }
+    
+    // Parse basic info from header
+    QString version = QString::fromLatin1(header, 8);
+    QString patientID = QString::fromLatin1(header + 8, 80);
+    QString recordingInfo = QString::fromLatin1(header + 88, 80);
+    QString startDate = QString::fromLatin1(header + 168, 8);
+    QString startTime = QString::fromLatin1(header + 176, 8);
+    QString numSignalsStr = QString::fromLatin1(header + 252, 4);
+    
+    bool ok;
+    int numSignals = numSignalsStr.trimmed().toInt(&ok);
+    if (!ok || numSignals <= 0) {
+        qWarning() << "Invalid number of signals:" << numSignalsStr;
+        file.close();
+        return false;
+    }
+    
+    qDebug() << "=== EDF HEADER ===";
+    qDebug() << "EDF Version:" << version;
+    qDebug() << "Patient ID:" << patientID.trimmed();
+    qDebug() << "Recording:" << recordingInfo.trimmed();
+    qDebug() << "Start:" << startDate.trimmed() << startTime.trimmed();
+    qDebug() << "Number of signals:" << numSignals;
+    
+    // ===== READ SIGNAL HEADERS =====
+    QVector<QString> labels(numSignals);
+    QVector<int> samplesPerRecord(numSignals);
+    
+    // Labels (16 chars each)
+    for (int i = 0; i < numSignals; ++i) {
+        char label[17] = {0};
+        if (stream.readRawData(label, 16) != 16) {
+            qWarning() << "Failed to read label for signal" << i;
+            file.close();
+            return false;
+        }
+        labels[i] = QString::fromLatin1(label, 16).trimmed();
+    }
+    
+    // Skip transducer type (80 chars per signal)
+    stream.skipRawData(80 * numSignals);
+    
+    // Skip physical dimension (8 chars per signal) - e.g., "uV", "V"
+    stream.skipRawData(8 * numSignals);
+    
+    // Read physical/digital min/max values
+    QVector<double> physMin(numSignals);
+    QVector<double> physMax(numSignals);
+    QVector<double> digMin(numSignals);
+    QVector<double> digMax(numSignals);
+    
+    for (int i = 0; i < numSignals; ++i) {
+        char physMinStr[9] = {0};
+        char physMaxStr[9] = {0};
+        char digMinStr[9] = {0};
+        char digMaxStr[9] = {0};
+        
+        if (stream.readRawData(physMinStr, 8) != 8 ||
+            stream.readRawData(physMaxStr, 8) != 8 ||
+            stream.readRawData(digMinStr, 8) != 8 ||
+            stream.readRawData(digMaxStr, 8) != 8) {
+            qWarning() << "Failed to read min/max values for signal" << i;
+            file.close();
+            return false;
+        }
+        
+        QString physMinQStr = QString::fromLatin1(physMinStr, 8).trimmed();
+        QString physMaxQStr = QString::fromLatin1(physMaxStr, 8).trimmed();
+        QString digMinQStr = QString::fromLatin1(digMinStr, 8).trimmed();
+        QString digMaxQStr = QString::fromLatin1(digMaxStr, 8).trimmed();
+        
+        physMin[i] = physMinQStr.toDouble(&ok);
+        if (!ok) physMin[i] = -500.0;
+        
+        physMax[i] = physMaxQStr.toDouble(&ok);
+        if (!ok) physMax[i] = 500.0;
+        
+        digMin[i] = digMinQStr.toDouble(&ok);
+        if (!ok) digMin[i] = -32768.0;
+        
+        digMax[i] = digMaxQStr.toDouble(&ok);
+        if (!ok) digMax[i] = 32767.0;
+        
+        // Debug check for corrupted values
+        if (qAbs(physMax[i] - physMin[i]) < 0.1 || qAbs(digMax[i] - digMin[i]) < 0.1) {
+            qWarning() << "WARNING: Corrupted calibration values for signal" << i << labels[i]
+                       << "phys:" << physMin[i] << "to" << physMax[i]
+                       << "dig:" << digMin[i] << "to" << digMax[i];
+        }
+    }
+    
+    // Skip prefiltering (80 chars per signal)
+    stream.skipRawData(80 * numSignals);
+    
+    // Skip reserved (32 chars per signal) - THIS IS CRITICAL!
+    stream.skipRawData(32 * numSignals);
+    
+    // Read samples per data record
+    for (int i = 0; i < numSignals; ++i) {
+        char samplesStr[9] = {0};
+        if (stream.readRawData(samplesStr, 8) != 8) {
+            qWarning() << "Failed to read samples per record for signal" << i;
+            file.close();
+            return false;
+        }
+        samplesPerRecord[i] = QString(samplesStr).trimmed().toInt(&ok);
+        if (!ok) samplesPerRecord[i] = 1;
+    }
+    
+    // Read duration of data record
+    char durationStr[9] = {0};
+    stream.readRawData(durationStr, 8);
+    double recordDuration = QString::fromLatin1(durationStr, 8).trimmed().toDouble(&ok);
+    if (!ok || recordDuration <= 0) {
+        recordDuration = 1.0; // Default
+    }
+    
+    qDebug() << "=== SIGNAL INFO ===";
+    qDebug() << "Record duration:" << recordDuration << "seconds";
+    for (int i = 0; i < qMin(8, numSignals); ++i) {
+        double samplingRate = samplesPerRecord[i] / recordDuration;
+        qDebug() << "Signal" << i << labels[i] 
+                 << "samplesPerRecord:" << samplesPerRecord[i]
+                 << "samplingRate:" << samplingRate << "Hz";
+    }
+    
+    // ===== READ DATA =====
     data.clear();
     
-    // Create 8 dummy EEG channels
-    QStringList channelNames = {"Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4"};
+    // Get current position (end of headers)
+    qint64 headerEndPos = file.pos();
+    qDebug() << "Header ends at position:" << headerEndPos;
     
-    for (int ch = 0; ch < 8; ++ch) {
+    // Calculate total samples per record
+    int totalSamplesPerRecord = 0;
+    for (int i = 0; i < numSignals; ++i) {
+        totalSamplesPerRecord += samplesPerRecord[i];
+    }
+    qDebug() << "Total samples per record:" << totalSamplesPerRecord;
+    
+    // Calculate bytes per record (2 bytes per sample in EDF)
+    int bytesPerRecord = totalSamplesPerRecord * 2;
+    
+    // Calculate number of records from file size
+    qint64 fileSize = file.size();
+    qint64 dataSize = fileSize - headerEndPos;
+    int numRecords = dataSize / bytesPerRecord;
+    
+    // For performance, limit to first N records (temporary)
+    numRecords = qMin(numRecords, 10000);
+    
+    qDebug() << "=== FILE INFO ===";
+    qDebug() << "File size:" << fileSize << "bytes";
+    qDebug() << "Data size:" << dataSize << "bytes";
+    qDebug() << "Bytes per record:" << bytesPerRecord;
+    qDebug() << "Total records in file:" << numRecords
+             << "(" << (numRecords * recordDuration) << "seconds)";
+    qDebug() << "Will read" << numRecords << "records";
+    
+    // Allocate raw data storage
+    QVector<QVector<short>> rawData(numSignals);
+    for (int i = 0; i < numSignals; ++i) {
+        int totalSamples = samplesPerRecord[i] * numRecords;
+        rawData[i].resize(totalSamples);
+        if (i < 8) {
+            qDebug() << "Allocating" << totalSamples << "samples for channel" << i << labels[i];
+        }
+    }
+    
+    // Seek to data start
+    file.seek(headerEndPos);
+    
+    // Read data record by record
+    int totalSamplesRead = 0;
+    for (int rec = 0; rec < numRecords; ++rec) {
+        for (int sig = 0; sig < numSignals; ++sig) {
+            int offset = rec * samplesPerRecord[sig];
+            
+            // Read each sample
+            for (int s = 0; s < samplesPerRecord[sig]; ++s) {
+                short sample;
+                qint64 bytesRead = file.read((char*)&sample, sizeof(short));
+                
+                if (bytesRead != sizeof(short)) {
+                    qWarning() << "Failed to read sample" << s << "for signal" << sig 
+                              << "in record" << rec;
+                    file.close();
+                    return false;
+                }
+                
+                // Byte swap if needed (EDF is little-endian)
+                if (QSysInfo::ByteOrder == QSysInfo::BigEndian) {
+                    sample = ((sample & 0xFF) << 8) | ((sample >> 8) & 0xFF);
+                }
+                
+                rawData[sig][offset + s] = sample;
+                totalSamplesRead++;
+            }
+        }
+    }
+    
+    qDebug() << "Total samples read:" << totalSamplesRead;
+    
+    // Convert raw data to EEG channels
+    int channelsToLoad = qMin(numSignals, 32); // Limit to 32 channels
+    for (int sig = 0; sig < channelsToLoad; ++sig) {
+        // Skip annotation channels
+        if (labels[sig].contains("EDF Annotations", Qt::CaseInsensitive) ||
+            labels[sig].contains("Annotation", Qt::CaseInsensitive)) {
+            qDebug() << "Skipping annotation channel:" << sig << labels[sig];
+            continue;
+        }
+        
         EEGChannel channel;
-        channel.label = channelNames[ch];
-        channel.unit = "uV";
-        channel.samplingRate = 250.0;
+        channel.label = labels[sig];
+        if (channel.label.isEmpty()) {
+            channel.label = QString("CH%1").arg(sig + 1);
+        }
+        channel.unit = "µV";
         
-        // Generate 10 seconds of fake EEG data
-        int sampleCount = static_cast<int>(10.0 * channel.samplingRate);
-        channel.data.resize(sampleCount);
+        // Calculate sampling rate
+        channel.samplingRate = samplesPerRecord[sig] / recordDuration;
         
-        // Generate sine waves with different frequencies
-        for (int i = 0; i < sampleCount; ++i) {
-            double t = i / channel.samplingRate;
-            channel.data[i] = 
-                50.0 * sin(2 * M_PI * 10.0 * t) +   // Alpha waves
-                20.0 * sin(2 * M_PI * 20.0 * t) +   // Beta waves
-                10.0 * sin(2 * M_PI * 40.0 * t);    // Gamma waves
+        // ===== DYNAMIC SCALING SECTION =====
+        double scale, offset;
+        
+        if (qAbs(digMax[sig] - digMin[sig]) > 0.1 && qAbs(physMax[sig] - physMin[sig]) > 0.1) {
+            // 1. Use EDF calibration if valid
+            scale = (physMax[sig] - physMin[sig]) / (digMax[sig] - digMin[sig]);
+            offset = physMin[sig] - digMin[sig] * scale;
+            qDebug() << "Channel" << sig << "EDF calibration: scale=" << scale;
+        } 
+        else if (!rawData[sig].empty() && rawData[sig].size() > 10) {
+            // 2. Dynamic scaling based on data statistics
+            short minVal = *std::min_element(rawData[sig].begin(), rawData[sig].end());
+            short maxVal = *std::max_element(rawData[sig].begin(), rawData[sig].end());
+            double range = maxVal - minVal;
+            
+            if (range > 0.1) {
+                // Calculate mean for centering
+                double sum = 0.0;
+                for (short val : rawData[sig]) {
+                    sum += val;
+                }
+                double mean = sum / rawData[sig].size();
+                
+                // Smart scaling logic:
+                if (range < 100) {  // Already in good µV range
+                    scale = 1.0;
+                    offset = 0.0;
+                    qDebug() << "Channel" << sig << "small range - assuming µV units";
+                }
+                else if (range > 30000) {  // Full 16-bit range
+                    scale = 200.0 / 65536.0;  // Map to ±100µV
+                    offset = -mean * scale;
+                    qDebug() << "Channel" << sig << "large range - 16-bit ADC scaling";
+                }
+                else {  // Custom scaling - normalize to reasonable range
+                    // Scale to ±50µV range (adjustable)
+                    double targetRange = 100.0;  // ±50µV
+                    scale = targetRange / range;
+                    offset = -mean * scale;
+                    qDebug() << "Channel" << sig << "dynamic: raw=" << minVal << "to" << maxVal 
+                             << "scale=" << scale << "offset=" << offset;
+                }
+            } else {
+                // Very small range
+                scale = 1.0;
+                offset = 0.0;
+                qDebug() << "Channel" << sig << "very small range - unit scaling";
+            }
+        } 
+        else {
+            // 3. Ultimate fallback
+            scale = 1.0;
+            offset = 0.0;
+            qDebug() << "Channel" << sig << "fallback scaling";
+        }
+        // ===== END DYNAMIC SCALING =====
+        
+        // Convert samples
+        int numSamples = rawData[sig].size();
+        channel.data.resize(numSamples);
+        
+        for (int i = 0; i < numSamples; ++i) {
+            channel.data[i] = rawData[sig][i] * scale + offset;
         }
         
         data.addChannel(channel);
+        
+        // Debug output for first few channels
+        if (sig < 5 && numSamples > 0) {
+            double minVal = *std::min_element(channel.data.begin(), channel.data.end());
+            double maxVal = *std::max_element(channel.data.begin(), channel.data.end());
+            double meanVal = std::accumulate(channel.data.begin(), channel.data.end(), 0.0) / numSamples;
+            
+            qDebug() << "Channel" << sig << channel.label
+                     << "samples:" << numSamples
+                     << "rate:" << channel.samplingRate << "Hz"
+                     << "range:" << minVal << "to" << maxVal << "µV"
+                     << "mean:" << meanVal << "µV";
+        }
     }
     
-    data.setPatientInfo("Test Patient");
-    data.setRecordingInfo("EDF Import");
-    data.setStartDateTime(QDateTime::currentDateTime());
+    // Set metadata
+    data.setPatientInfo(patientID.trimmed());
+    data.setRecordingInfo(recordingInfo.trimmed());
+    
+    // Parse date/time
+    QDateTime startDT = QDateTime::fromString(
+        startDate.trimmed() + " " + startTime.trimmed(), 
+        "dd.MM.yy hh.mm.ss"
+    );
+    if (startDT.isValid()) {
+        data.setStartDateTime(startDT);
+    }
     
     file.close();
-    qDebug() << "Loaded dummy EDF data with 8 channels";
+    qDebug() << "=== LOAD COMPLETE ===";
+    qDebug() << "EDF loaded with" << data.channelCount() << "channels";
+    qDebug() << "Total duration:" << data.duration() << "seconds";
     return true;
 }
 

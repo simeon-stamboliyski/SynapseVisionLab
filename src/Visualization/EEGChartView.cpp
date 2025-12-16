@@ -69,7 +69,10 @@ void EEGChartView::createChart() {
 }
 
 void EEGChartView::updateChart() {
+    qDebug() << "=== updateChart called ===";
+    
     if (!m_eegData || m_eegData->isEmpty()) {
+        qDebug() << "No data, clearing chart";
         // Clear all series
         for (auto series : m_series) {
             m_chart->removeSeries(series);
@@ -79,6 +82,8 @@ void EEGChartView::updateChart() {
         return;
     }
     
+    qDebug() << "Data exists, channel count:" << m_eegData->channelCount();
+    
     // Remove old series
     for (auto series : m_series) {
         m_chart->removeSeries(series);
@@ -86,60 +91,99 @@ void EEGChartView::updateChart() {
     }
     m_series.clear();
     
+    // TEMPORARY FIX: Limit to first 8 channels to avoid crashes
+    QVector<int> visibleChannelsTemp;
+    int maxChannels = qMin(8, m_eegData->channelCount());
+    for (int i = 0; i < maxChannels; ++i) {
+        visibleChannelsTemp.append(i);
+    }
+    m_visibleChannels = visibleChannelsTemp;
+    
+    qDebug() << "Showing" << m_visibleChannels.size() << "channels";
+    
+    // Get axes first
+    QValueAxis *axisX = qobject_cast<QValueAxis*>(m_chart->axisX(nullptr));
+    QValueAxis *axisY = qobject_cast<QValueAxis*>(m_chart->axisY(nullptr));
+    
+    if (!axisX || !axisY) {
+        qWarning() << "Failed to get chart axes, recreating chart";
+        createChart();
+        axisX = qobject_cast<QValueAxis*>(m_chart->axisX(nullptr));
+        axisY = qobject_cast<QValueAxis*>(m_chart->axisY(nullptr));
+        if (!axisX || !axisY) {
+            qCritical() << "Cannot get chart axes even after recreation";
+            return;
+        }
+    }
+    
     // Create new series for visible channels
     int channelCount = m_eegData->channelCount();
     for (int i = 0; i < m_visibleChannels.size(); ++i) {
         int channelIndex = m_visibleChannels[i];
-        if (channelIndex >= 0 && channelIndex < channelCount) {
-            const EEGChannel &channel = m_eegData->channel(channelIndex);
+        
+        // Bounds check
+        if (channelIndex < 0 || channelIndex >= channelCount) {
+            qWarning() << "Invalid channel index:" << channelIndex;
+            continue;
+        }
+        
+        const EEGChannel &channel = m_eegData->channel(channelIndex);
+        
+        // Empty data check
+        if (channel.data.isEmpty()) {
+            qWarning() << "Channel" << channelIndex << "has empty data";
+            continue;
+        }
+        
+        qDebug() << "Creating series for channel" << channelIndex 
+                 << "label:" << channel.label 
+                 << "samples:" << channel.data.size();
+        
+        QLineSeries *series = new QLineSeries();
+        series->setName(channel.label);
+        series->setPen(QPen(getChannelColor(i), 1));
+        
+        // Add data points with bounds checking
+        int startSample = static_cast<int>(m_startTime * channel.samplingRate);
+        int endSample = static_cast<int>((m_startTime + m_duration) * channel.samplingRate);
+        startSample = qMax(0, startSample);
+        endSample = qMin(channel.data.size() - 1, endSample);
+        
+        if (startSample <= endSample) {
+            // Downsample for performance
+            int step = qMax(1, (endSample - startSample) / 2000);
+            double offset = i * m_offsetScale;
             
-            QLineSeries *series = new QLineSeries();
-            series->setName(channel.label);
-            series->setPen(QPen(getChannelColor(i), 1));
-            
-            // Add data points
-            int startSample = static_cast<int>(m_startTime * channel.samplingRate);
-            int endSample = static_cast<int>((m_startTime + m_duration) * channel.samplingRate);
-            startSample = qMax(0, startSample);
-            endSample = qMin(channel.data.size() - 1, endSample);
-            
-            if (startSample <= endSample) {
-                // Downsample for performance if too many points
-                int step = qMax(1, (endSample - startSample) / 2000);
-                double offset = i * m_offsetScale;
-                
-                for (int s = startSample; s <= endSample; s += step) {
+            for (int s = startSample; s <= endSample; s += step) {
+                // Extra bounds check
+                if (s >= 0 && s < channel.data.size()) {
                     double time = s / channel.samplingRate;
                     double value = channel.data[s] * m_verticalScale + offset;
                     series->append(time, value);
                 }
             }
-            
-            m_series.append(series);
-            m_chart->addSeries(series);
-            
-            series->attachAxis(m_chart->axisX(series));
-            series->attachAxis(m_chart->axisY(series));
         }
+        
+        m_series.append(series);
+        m_chart->addSeries(series);
+        
+        // Attach to axes
+        series->attachAxis(axisX);
+        series->attachAxis(axisY);
     }
     
-    // Update axes
-    QValueAxis *axisX = qobject_cast<QValueAxis*>(m_chart->axisX(nullptr));
-    QValueAxis *axisY = qobject_cast<QValueAxis*>(m_chart->axisY(nullptr));
-    
-    if (!axisX || !axisY) {
-        qWarning() << "Failed to get chart axes";
-        return;
-    }
-    
+    // Update axes ranges
     axisX->setRange(m_startTime, m_startTime + m_duration);
     
     // Calculate Y-axis range based on visible channels
-    double yMin = 0;
-    double yMax = m_visibleChannels.size() * m_offsetScale;
-    axisY->setRange(yMin - m_offsetScale * 0.5, yMax + m_offsetScale * 0.5);
+    if (!m_visibleChannels.isEmpty()) {
+        double yMin = 0;
+        double yMax = m_visibleChannels.size() * m_offsetScale;
+        axisY->setRange(yMin - m_offsetScale * 0.5, yMax + m_offsetScale * 0.5);
+    }
     
     m_chart->update();
+    qDebug() << "Chart update complete";
 }
 
 void EEGChartView::setVisibleChannels(const QVector<int> &channels) {
