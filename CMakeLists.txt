@@ -29,7 +29,7 @@ target_link_libraries(SynapseVisionLab
     Qt5::Core
 )
 
-# CRITICAL: Add ALL source directories to include path
+# Add ALL source directories to include path
 target_include_directories(SynapseVisionLab PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/src
