@@ -2009,29 +2009,6 @@ Dynamic sampling based on visible time window
 
 Only renders visible channels
 
-🎮 Interaction System
-Mouse Interactions
-Interaction	Mouse Action	Result
-Horizontal Pan	Middle-click drag or Shift+Left drag	Scroll left/right in time
-Vertical Zoom	Right-click drag up/down	Increase/decrease amplitude scale
-Rubber Band Zoom	Left-click drag (default)	Rectangular zoom to area
-Wheel Zoom	Mouse wheel	Horizontal time zoom
-Ctrl+Wheel	Ctrl + Mouse wheel	Vertical amplitude zoom
-Shift+Wheel	Shift + Mouse wheel	Adjust channel spacing
-Keyboard Shortcuts
-Key	Action	Description
-Left Arrow	Pan left	Move view earlier in time
-Right Arrow	Pan right	Move view later in time
-Up Arrow	Zoom in (vertical)	Increase amplitude scale
-Down Arrow	Zoom out (vertical)	Decrease amplitude scale
-G	Toggle grid	Show/hide grid lines
-Interactive Feedback
-Cursor changes: Hand cursor for panning, resize cursor for zooming
-
-Real-time updates: Chart updates during drag operations
-
-Bounds checking: Prevents scrolling beyond data limits
-
 🔧 Implementation Details
 Chart Creation (createChart())
 cpp
