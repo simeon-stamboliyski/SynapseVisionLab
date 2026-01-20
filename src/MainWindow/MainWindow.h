@@ -35,6 +35,7 @@ private slots:
     
     void onChannelSelected();
     void onChannelListSelectionChanged();
+    void onVisibleChannelsChanged(const QVector<int> &channels);
     
     void onFilterApply();
     void onGainApply();

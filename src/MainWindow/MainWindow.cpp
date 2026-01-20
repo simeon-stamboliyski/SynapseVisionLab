@@ -39,6 +39,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_eegData, &EEGData::dataChanged, this, &MainWindow::updateChannelList);
     connect(m_eegData, &EEGData::channelAdded, this, &MainWindow::updateChannelList);
     connect(m_eegData, &EEGData::channelRemoved, this, &MainWindow::updateChannelList);
+
+    connect(m_chartView, &EEGChartView::visibleChannelsChanged,
+            this, &MainWindow::onVisibleChannelsChanged);
     
     updateStatusBar();
 }
@@ -117,6 +120,20 @@ void MainWindow::createActions() {
     m_actAbout->setStatusTip("About EEG Data Processor");
     connect(m_actAbout, &QAction::triggered, this, &MainWindow::onShowAbout);
 
+}
+
+void MainWindow::onVisibleChannelsChanged(const QVector<int> &channels) {
+    qDebug() << "Visible channels changed. Count:" << channels.size();
+    
+    // Update the checkboxes in the channel list to match what's visible
+    for (int i = 0; i < m_channelList->count(); ++i) {
+        QListWidgetItem *item = m_channelList->item(i);
+        if (item) {
+            // Check if this channel index is in the visible channels list
+            bool isVisible = channels.contains(i);
+            item->setCheckState(isVisible ? Qt::Checked : Qt::Unchecked);
+        }
+    }
 }
 
 void MainWindow::createMenus() {
@@ -376,6 +393,9 @@ void MainWindow::onFileOpen() {
     
     if (m_eegData->loadFromFile(filePath)) {
         m_currentFilePath = filePath;
+
+        m_chartView->selectAllChannels();
+
         m_chartView->updateChart();
         setWindowTitle(QString("EEG Data Processor - %1").arg(QFileInfo(filePath).fileName()));
         

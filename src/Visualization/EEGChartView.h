@@ -18,6 +18,13 @@ public:
     void setEEGData(EEGData *data);
     void updateChart();
     void setVisibleChannels(const QVector<int> &channels);
+
+    void selectAllChannels();
+    void selectFirstNChannels(int n);
+    void clearVisibleChannels();
+    QVector<int> getVisibleChannels() const { return m_visibleChannels; }
+    bool isChannelVisible(int channelIndex) const;
+
     void setTimeRange(double startTime, double duration);
     void setVerticalScale(double scale);
     void setOffsetScale(double offset);
@@ -29,6 +36,7 @@ public:
 signals:
     void timeRangeChanged(double start, double duration);
     void channelSelected(int channelIndex);
+    void visibleChannelsChanged(const QVector<int> &channels);
     
 protected:
     void wheelEvent(QWheelEvent *event) override;
@@ -43,6 +51,7 @@ private:
     void zoomChart(double factor, const QPointF &centerPoint);
     void panChart(double dx, double dy);
     QColor getChannelColor(int index) const;
+    void ensureVisibleChannels();
     
 private:
     EEGData *m_eegData;

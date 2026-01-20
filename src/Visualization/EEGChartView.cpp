@@ -68,11 +68,59 @@ void EEGChartView::createChart() {
     setChart(m_chart);
 }
 
+void EEGChartView::selectAllChannels() {
+    m_visibleChannels.clear();
+    if (m_eegData) {
+        for (int i = 0; i < m_eegData->channelCount(); ++i) {
+            m_visibleChannels.append(i);
+        }
+    }
+    updateChart();
+    emit visibleChannelsChanged(m_visibleChannels);
+}
+
+void EEGChartView::selectFirstNChannels(int n) {
+    m_visibleChannels.clear();
+    if (m_eegData) {
+        int maxChannels = qMin(n, m_eegData->channelCount());
+        for (int i = 0; i < maxChannels; ++i) {
+            m_visibleChannels.append(i);
+        }
+    }
+    updateChart();
+    emit visibleChannelsChanged(m_visibleChannels);
+}
+
+void EEGChartView::clearVisibleChannels() {
+    m_visibleChannels.clear();
+    updateChart();
+    emit visibleChannelsChanged(m_visibleChannels);
+}
+
+bool EEGChartView::isChannelVisible(int channelIndex) const {
+    return m_visibleChannels.contains(channelIndex);
+}
+
+void EEGChartView::ensureVisibleChannels() {
+    // If no channels are visible, select first 8 by default
+    if (m_visibleChannels.isEmpty() && m_eegData && !m_eegData->isEmpty()) {
+        int defaultChannels = qMin(8, m_eegData->channelCount());
+        for (int i = 0; i < defaultChannels; ++i) {
+            m_visibleChannels.append(i);
+        }
+        qDebug() << "No channels selected, defaulting to first" << defaultChannels;
+    }
+}
+
 void EEGChartView::updateChart() {
     qDebug() << "=== updateChart called ===";
+
+    ensureVisibleChannels();
+    qDebug() << "m_eegData:" << m_eegData;
+    qDebug() << "m_visibleChannels count:" << m_visibleChannels.size();
     
     if (!m_eegData || m_eegData->isEmpty()) {
-        qDebug() << "No data, clearing chart";
+        qDebug() << "No data or data is empty, clearing chart";
         // Clear all series
         for (auto series : m_series) {
             m_chart->removeSeries(series);
@@ -83,6 +131,19 @@ void EEGChartView::updateChart() {
     }
     
     qDebug() << "Data exists, channel count:" << m_eegData->channelCount();
+    qDebug() << "Visible channels:" << m_visibleChannels;
+    
+    // Check if visible channels are valid
+    if (m_visibleChannels.isEmpty()) {
+        qDebug() << "WARNING: No visible channels selected!";
+        // Clear chart but don't crash
+        for (auto series : m_series) {
+            m_chart->removeSeries(series);
+            delete series;
+        }
+        m_series.clear();
+        return;
+    }
     
     // Remove old series
     for (auto series : m_series) {
@@ -91,25 +152,19 @@ void EEGChartView::updateChart() {
     }
     m_series.clear();
     
-    // TEMPORARY FIX: Limit to first 8 channels to avoid crashes
-    QVector<int> visibleChannelsTemp;
-    int maxChannels = qMin(8, m_eegData->channelCount());
-    for (int i = 0; i < maxChannels; ++i) {
-        visibleChannelsTemp.append(i);
-    }
-    m_visibleChannels = visibleChannelsTemp;
-    
-    qDebug() << "Showing" << m_visibleChannels.size() << "channels";
-    
     // Get axes first
-    QValueAxis *axisX = qobject_cast<QValueAxis*>(m_chart->axisX(nullptr));
-    QValueAxis *axisY = qobject_cast<QValueAxis*>(m_chart->axisY(nullptr));
+    QList<QAbstractAxis*> axesX = m_chart->axes(Qt::Horizontal);
+    QList<QAbstractAxis*> axesY = m_chart->axes(Qt::Vertical);
+    QValueAxis *axisX = axesX.isEmpty() ? nullptr : qobject_cast<QValueAxis*>(axesX.first());
+    QValueAxis *axisY = axesY.isEmpty() ? nullptr : qobject_cast<QValueAxis*>(axesY.first());
     
     if (!axisX || !axisY) {
         qWarning() << "Failed to get chart axes, recreating chart";
         createChart();
-        axisX = qobject_cast<QValueAxis*>(m_chart->axisX(nullptr));
-        axisY = qobject_cast<QValueAxis*>(m_chart->axisY(nullptr));
+        axesX = m_chart->axes(Qt::Horizontal);
+        axesY = m_chart->axes(Qt::Vertical);
+        axisX = axesX.isEmpty() ? nullptr : qobject_cast<QValueAxis*>(axesX.first());
+        axisY = axesY.isEmpty() ? nullptr : qobject_cast<QValueAxis*>(axesY.first());
         if (!axisX || !axisY) {
             qCritical() << "Cannot get chart axes even after recreation";
             return;
@@ -118,12 +173,14 @@ void EEGChartView::updateChart() {
     
     // Create new series for visible channels
     int channelCount = m_eegData->channelCount();
+    qDebug() << "Processing" << m_visibleChannels.size() << "channels";
+    
     for (int i = 0; i < m_visibleChannels.size(); ++i) {
         int channelIndex = m_visibleChannels[i];
         
         // Bounds check
         if (channelIndex < 0 || channelIndex >= channelCount) {
-            qWarning() << "Invalid channel index:" << channelIndex;
+            qWarning() << "Invalid channel index:" << channelIndex << "(max:" << channelCount - 1 << ")";
             continue;
         }
         
@@ -137,7 +194,8 @@ void EEGChartView::updateChart() {
         
         qDebug() << "Creating series for channel" << channelIndex 
                  << "label:" << channel.label 
-                 << "samples:" << channel.data.size();
+                 << "samples:" << channel.data.size()
+                 << "samplingRate:" << channel.samplingRate;
         
         QLineSeries *series = new QLineSeries();
         series->setName(channel.label);
@@ -149,19 +207,27 @@ void EEGChartView::updateChart() {
         startSample = qMax(0, startSample);
         endSample = qMin(channel.data.size() - 1, endSample);
         
+        qDebug() << "Time range:" << m_startTime << "to" << m_startTime + m_duration
+                 << "Sample range:" << startSample << "to" << endSample;
+        
         if (startSample <= endSample) {
             // Downsample for performance
             int step = qMax(1, (endSample - startSample) / 2000);
             double offset = i * m_offsetScale;
             
+            int pointCount = 0;
             for (int s = startSample; s <= endSample; s += step) {
                 // Extra bounds check
                 if (s >= 0 && s < channel.data.size()) {
                     double time = s / channel.samplingRate;
                     double value = channel.data[s] * m_verticalScale + offset;
                     series->append(time, value);
+                    pointCount++;
                 }
             }
+            qDebug() << "Added" << pointCount << "points to series";
+        } else {
+            qWarning() << "Invalid sample range for channel" << channelIndex;
         }
         
         m_series.append(series);
@@ -180,10 +246,11 @@ void EEGChartView::updateChart() {
         double yMin = 0;
         double yMax = m_visibleChannels.size() * m_offsetScale;
         axisY->setRange(yMin - m_offsetScale * 0.5, yMax + m_offsetScale * 0.5);
+        qDebug() << "Y-axis range:" << yMin - m_offsetScale * 0.5 << "to" << yMax + m_offsetScale * 0.5;
     }
     
     m_chart->update();
-    qDebug() << "Chart update complete";
+    qDebug() << "Chart update complete. Series count:" << m_series.size();
 }
 
 void EEGChartView::setVisibleChannels(const QVector<int> &channels) {
@@ -217,8 +284,10 @@ void EEGChartView::setOffsetScale(double offset) {
 
 void EEGChartView::setShowGrid(bool show) {
     m_showGrid = show;
-    QValueAxis *axisX = static_cast<QValueAxis*>(m_chart->axisX(nullptr));
-    QValueAxis *axisY = static_cast<QValueAxis*>(m_chart->axisY(nullptr));
+    QList<QAbstractAxis*> axesX = m_chart->axes(Qt::Horizontal);
+    QList<QAbstractAxis*> axesY = m_chart->axes(Qt::Vertical);
+    QValueAxis *axisX = axesX.isEmpty() ? nullptr : static_cast<QValueAxis*>(axesX.first());
+    QValueAxis *axisY = axesY.isEmpty() ? nullptr : static_cast<QValueAxis*>(axesY.first());
     axisX->setGridLineVisible(show);
     axisY->setGridLineVisible(show);
     m_chart->update();
@@ -265,7 +334,8 @@ void EEGChartView::mouseMoveEvent(QMouseEvent *event) {
     if (m_isPanning) {
         QPoint delta = event->pos() - m_lastMousePos;
         QRectF plotArea = m_chart->plotArea();
-        QValueAxis *axisX = static_cast<QValueAxis*>(m_chart->axisX(nullptr));
+        QList<QAbstractAxis*> axesX = m_chart->axes(Qt::Horizontal);
+        QValueAxis *axisX = axesX.isEmpty() ? nullptr : static_cast<QValueAxis*>(axesX.first());
         
         double xRange = axisX->max() - axisX->min();
         double dx = -delta.x() * xRange / plotArea.width();
