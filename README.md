@@ -1005,14 +1005,18 @@ m_chartView->updateData(*m_eegData);
 This header file defines the complete **command center** for the EEG application, providing a comprehensive interface that connects user interactions with data processing and visualization in a cohesive, professional desktop application interface.
 
 # MainWindow.cpp - Main Application Window Implementation
-📁 File: src/MainWindow/MainWindow.cpp
-📋 Category: User Interface / Main Controller (Implementation)
-🎯 Purpose
+
+**📁 File:** `src/MainWindow/MainWindow.cpp`
+
+**📋 Category:** User Interface / Main Controller (Implementation)
+
+**🎯 Purpose**
 This is the complete implementation of the main application window. It brings together all the UI components, connects user interactions to data processing, and provides the complete user experience for the EEG analysis application.
 
-🏗️ Construction & Initialization
-Constructor Setup
-cpp
+## 🏗️ Construction & Initialization
+
+### Constructor Setup
+```cpp
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       m_eegData(new EEGData(this)),        // Create data model
@@ -1037,7 +1041,8 @@ MainWindow::MainWindow(QWidget *parent)
     
     updateStatusBar();    // Initial status update
 }
-Key Design Decisions
+Key Design Decisions:
+
 Parent-Child Hierarchy: m_eegData has this as parent for automatic cleanup
 
 Minimum Size: Ensures usable interface even when window is small
@@ -1447,76 +1452,6 @@ MainWindow::~MainWindow() {
     // All QObjects are deleted automatically by parent-child hierarchy
     // No manual cleanup needed
 }
-🎯 Key Features Implemented
-1. Comprehensive Error Handling
-File operation failures
-
-Invalid parameter validation
-
-Empty data states
-
-User cancellation handling
-
-2. Responsive UI
-Progress indicators for long operations
-
-Real-time status updates
-
-Non-blocking user interactions
-
-3. Professional UX
-Standard keyboard shortcuts
-
-Context-sensitive status tips
-
-Confirmation dialogs for destructive actions
-
-Informative error messages
-
-4. Extensible Architecture
-Clean separation between UI and processing logic
-
-Easy to add new processing functions
-
-Modular dialog system for new features
-
-🔧 Performance Considerations
-UI Responsiveness
-Uses QCoreApplication::processEvents() during long operations
-
-Progress bar updates for file loading
-
-Efficient signal/slot connections
-
-Memory Management
-Parent-child hierarchy for automatic cleanup
-
-No memory leaks on window close
-
-Efficient data passing between components
-
-🚀 Integration Points
-With EEGData
-cpp
-// Data access
-int channelCount = m_eegData->channelCount();
-double duration = m_eegData->duration();
-
-// Processing
-m_eegData->applyFilter(channel, lowCut, highCut);
-
-// Statistics
-auto means = m_eegData->channelMeans();
-With EEGChartView
-cpp
-// Display control
-m_chartView->setTimeRange(start, duration);
-m_chartView->updateChart();
-
-// Channel visibility
-m_chartView->setVisibleChannels(selectedChannels);
-This implementation creates a complete, professional desktop application that successfully bridges user interactions with complex EEG data processing and visualization, following Qt best practices and providing a robust, user-friendly interface.
-
 
 # SignalProcessor.h - Signal Processing Utilities
 
@@ -1939,31 +1874,34 @@ auto segment = SignalProcessor::extractTimeWindow(eegSignal, 250.0, 10.0, 5.0);
 This signal processing library provides the **mathematical foundation** for EEG analysis, implementing both general-purpose signal operations and EEG-specific algorithms essential for clinical and research applications.
 
 # EEGChartView - EEG Data Visualization Component
-📁 Files:
-src/Visualization/EEGChartView.h (Interface)
 
-src/Visualization/EEGChartView.cpp (Implementation)
+**📁 Files:**
+- `src/Visualization/EEGChartView.h` (Interface)
+- `src/Visualization/EEGChartView.cpp` (Implementation)
 
-📋 Category: Visualization / Chart Display
-🎯 Purpose
+**📋 Category:** Visualization / Chart Display
+
+**🎯 Purpose**
 This is the primary visualization component that displays EEG signals in a multi-channel, time-series chart format. It provides interactive visualization of EEG data with real-time updates, zooming, panning, and channel management capabilities. Think of it as the "oscilloscope" of your EEG application.
 
-🏗️ Architecture Overview
-Inheritance Hierarchy
-text
+## 🏗️ Architecture Overview
+
+### Inheritance Hierarchy
 QWidget
-  └── QChartView (Qt Charts)
-        └── EEGChartView (Custom)
-Design Patterns
-Observer Pattern: Listens to EEGData changes for real-time updates
+└── QChartView (Qt Charts)
+└── EEGChartView (Custom)
 
-Strategy Pattern: Different interaction modes (pan, zoom, select)
+text
 
-Composite Pattern: Multiple channel series combined into single chart
+### Design Patterns
+- **Observer Pattern**: Listens to EEGData changes for real-time updates
+- **Strategy Pattern**: Different interaction modes (pan, zoom, select)
+- **Composite Pattern**: Multiple channel series combined into single chart
 
-📊 Key Components
-Core Data & Chart
-cpp
+## 📊 Key Components
+
+### Core Data & Chart
+```cpp
 EEGData *m_eegData;           // Reference to data model
 QChart *m_chart;              // Qt Charts container
 QVector<QLineSeries*> m_series; // Individual channel plot series
@@ -2212,155 +2150,10 @@ Channel 3: ──────────────── (offset: 2 × offset
 Channel 2: ──────────────── (offset: 1 × offsetScale)
 Channel 1: ──────────────── (offset: 0 × offsetScale)
 Time (s):  0    1    2    3    4
-
 main.cpp - Application Entry Point
 📁 File: src/main.cpp
+
 📋 Category: Application Bootstrap / Entry Point
+
 🎯 Purpose
 This is the application entry point - the first code that executes when the EEG application starts. It initializes the Qt framework, creates the main application window, and starts the event loop. Think of it as the "starter motor" for the entire application.
-
-🏗️ Architecture Role
-Bootstrapping Sequence
-text
-Operating System
-     ↓
-main() function (this file)
-     ↓
-QApplication initialization
-     ↓
-MainWindow creation
-     ↓
-Event loop start (app.exec())
-     ↓
-User interacts with application
-📊 Code Breakdown
-1. Includes
-cpp
-#include "MainWindow.h"
-#include <QApplication>
-MainWindow.h: The main application window class
-
-<QApplication>: Qt's application management class
-
-2. Main Function Signature
-cpp
-int main(int argc, char *argv[])
-Standard C++ entry point
-
-argc: Argument count (number of command-line arguments)
-
-argv: Argument vector (array of command-line argument strings)
-
-Returns an integer exit code (0 = success, non-zero = error)
-
-3. QApplication Creation
-cpp
-QApplication app(argc, argv);
-Purpose: Creates the central Qt application object
-Responsibilities:
-
-Manages the GUI application's control flow
-
-Handles command-line arguments
-
-Provides global application settings
-
-Manages the event loop
-
-Key initialization actions performed by QApplication:
-
-Sets up the event system: Signal/slot mechanism
-
-Initializes GUI resources: Fonts, styles, icons
-
-Parses command-line arguments: --style, --font, etc.
-
-Sets up application-wide settings: Organization, application name
-
-4. Application Metadata
-cpp
-app.setApplicationName("SynapseVisionLab");
-app.setOrganizationName("SynapseVisionLab");
-Purpose: Sets application identity for system integration
-
-Why this matters:
-
-Settings Persistence: Qt uses these names to create configuration files
-
-Location: ~/.config/SynapseVisionLab/SynapseVisionLab.conf (Linux)
-
-Location: %APPDATA%\SynapseVisionLab\SynapseVisionLab.conf (Windows)
-
-Window Manager Identification: Helps OS identify the application
-
-Professional Polish: Gives the app a proper identity
-
-Future Extensions: Enables features like automatic updates, crash reporting
-
-5. MainWindow Creation
-cpp
-MainWindow window;
-What happens during construction:
-
-UI Components Created: All menus, toolbars, dock widgets
-
-Data Model Initialized: EEGData object created
-
-Chart View Setup: EEGChartView initialized
-
-Signal Connections: UI events connected to handlers
-
-Layout Finalized: All widgets positioned and sized
-
-6. Window Display
-cpp
-window.show();
-Actions performed:
-
-Makes the window visible
-
-Triggers initial layout calculations
-
-Sends paint events to render the UI
-
-Starts accepting user input
-
-Note: In Qt, windows are hidden by default; show() must be called explicitly.
-
-7. Event Loop Start
-cpp
-return app.exec();
-This is where the magic happens - starts the Qt event loop:
-
-Event Loop Responsibilities:
-
-Listens for events: Mouse clicks, key presses, timer events, etc.
-
-Dispatches events: Sends events to appropriate widgets
-
-Manages repaints: Handles widget updates when needed
-
-Processes signals/slots: Executes connected functions
-
-Maintains responsiveness: Ensures UI doesn't freeze
-
-The Event Loop Flow:
-
-text
-while (application is running) {
-    1. Wait for next event
-    2. Process the event (mouse click, key press, etc.)
-    3. Send event to appropriate widget
-    4. If widget handles event, execute its handler
-    5. Update display if needed
-    6. Repeat
-}
-Exit Condition: The event loop continues until:
-
-QApplication::quit() is called
-
-User closes all windows (with certain settings)
-
-QCoreApplication::exit() is called
-
-Return Value: Returns the application exit code (0 for success)
