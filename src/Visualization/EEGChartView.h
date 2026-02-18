@@ -29,6 +29,7 @@ public:
     void setVerticalScale(double scale);
     void setOffsetScale(double offset);
     void setShowGrid(bool show);
+    void setSelectedChannel(int channel);
     
     double currentStartTime() const { return m_startTime; }
     double currentDuration() const { return m_duration; }
@@ -50,7 +51,7 @@ private:
     void updateSeries();
     void zoomChart(double factor, const QPointF &centerPoint);
     void panChart(double dx, double dy);
-    QColor getChannelColor(int index) const;
+    QColor getChannelColor(int index, bool isSelected) const;
     void ensureVisibleChannels();
     
 private:
@@ -64,6 +65,7 @@ private:
     double m_verticalScale;
     double m_offsetScale;
     bool m_showGrid;
+    int m_selectedChannel;
     
     QPoint m_lastMousePos;
     bool m_isPanning;

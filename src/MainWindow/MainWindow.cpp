@@ -87,12 +87,12 @@ void MainWindow::createActions() {
                                   m_chartView->currentDuration() * 0.8);
     });
     
-    m_actZoomOut = new QAction("Zoom &Out", this);  // CHANGED LINE 84
+    m_actZoomOut = new QAction("Zoom &Out", this);
     m_actZoomOut->setShortcut(QKeySequence::ZoomOut);
     m_actZoomOut->setStatusTip("Zoom out");
     connect(m_actZoomOut, &QAction::triggered, [this]() {
-        m_chartView->setTimeRange(m_chartView->currentStartTime(), 
-                                  m_chartView->currentDuration() * 1.25);
+    double newDuration = m_chartView->currentDuration() * 1.25;
+    m_chartView->setTimeRange(m_chartView->currentStartTime(), newDuration);
     });
     
     m_actPanLeft = new QAction("Pan &Left", this);  // CHANGED LINE 91
@@ -212,6 +212,13 @@ void MainWindow::createDockWidgets() {
     m_channelSelectSpin->setValue(0);
     channelLayout->addRow("Channel:", m_channelSelectSpin);
     procLayout->addWidget(channelGroup);
+
+    connect(m_channelSelectSpin, QOverload<int>::of(&QSpinBox::valueChanged),
+        [this](int channel) {
+    m_chartView->setSelectedChannel(channel);
+    
+    qDebug() << "Channel selected:" << channel;
+});
     
     // Filter controls
     QGroupBox *filterGroup = new QGroupBox("Filter");
@@ -318,7 +325,7 @@ void MainWindow::createDockWidgets() {
     m_timeStartSpin->setSuffix(" s");
     
     m_timeDurationSpin = new QDoubleSpinBox();
-    m_timeDurationSpin->setRange(0.1, 60.0);
+    m_timeDurationSpin->setRange(0.1, 3600.0);
     m_timeDurationSpin->setValue(10.0);
     m_timeDurationSpin->setSuffix(" s");
     
@@ -349,6 +356,23 @@ void MainWindow::createDockWidgets() {
     procLayout->addStretch();
     m_processingDock->setWidget(m_processingWidget);
     addDockWidget(Qt::RightDockWidgetArea, m_processingDock);
+
+    connect(m_timeStartSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+        [this](double) {  // Ignore the value, get fresh from spin box
+    m_chartView->setTimeRange(m_timeStartSpin->value(), m_timeDurationSpin->value());
+    });
+
+    connect(m_timeDurationSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            [this](double) {
+        m_chartView->setTimeRange(m_timeStartSpin->value(), m_timeDurationSpin->value());
+    });
+
+    connect(m_verticalScaleSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            m_chartView, &EEGChartView::setVerticalScale);
+
+    connect(m_offsetScaleSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            m_chartView, &EEGChartView::setOffsetScale);
+
 }
 
 void MainWindow::createCentralWidget() {
@@ -414,10 +438,17 @@ void MainWindow::onFileOpen() {
         m_channelSelectSpin->setRange(0, qMax(0, channelCount - 1));
         
         double duration = m_eegData->duration();
-        m_timeDurationSpin->setRange(0.1, qMin(60.0, duration));
-        m_timeDurationSpin->setValue(qMin(10.0, duration));
+        qDebug() << "=== DURATION DEBUG ===";
+        qDebug() << "File duration:" << duration << "seconds";
+        qDebug() << "Setting m_timeDurationSpin range to: 0.1 -" << duration;
         
-        m_chartView->setTimeRange(0, qMin(10.0, duration));
+        m_timeDurationSpin->blockSignals(true);
+        m_timeDurationSpin->setRange(0.1, duration);
+        m_timeDurationSpin->setValue(qMin(10.0, duration));
+        m_timeDurationSpin->blockSignals(false);
+        
+        qDebug() << "Actual max after setting:" << m_timeDurationSpin->maximum();
+        qDebug() << "Actual value after setting:" << m_timeDurationSpin->value();
         
         QMessageBox::information(this, "Success", 
                                 QString("Loaded %1 channels with %2 seconds of data")

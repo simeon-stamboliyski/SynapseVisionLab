@@ -17,7 +17,8 @@ EEGChartView::EEGChartView(QWidget *parent)
       m_offsetScale(100.0),
       m_showGrid(true),
       m_isPanning(false),
-      m_isZooming(false) {
+      m_isZooming(false),
+      m_selectedChannel(-1) {
     
     setChart(m_chart);
     setRenderHint(QPainter::Antialiasing);
@@ -199,7 +200,11 @@ void EEGChartView::updateChart() {
         
         QLineSeries *series = new QLineSeries();
         series->setName(channel.label);
-        series->setPen(QPen(getChannelColor(i), 1));
+
+        bool isSelected = (channelIndex == m_selectedChannel);
+        int penWidth = isSelected ? 3 : 1;
+        QColor color = getChannelColor(i, isSelected);
+        series->setPen(QPen(color, penWidth));
         
         // Add data points with bounds checking
         int startSample = static_cast<int>(m_startTime * channel.samplingRate);
@@ -259,14 +264,19 @@ void EEGChartView::setVisibleChannels(const QVector<int> &channels) {
 }
 
 void EEGChartView::setTimeRange(double startTime, double duration) {
-    m_startTime = qMax(0.0, startTime);
-    m_duration = qMax(0.1, duration);
-    
-    if (m_eegData) {
-        double totalDuration = m_eegData->duration();
-        m_startTime = qMin(m_startTime, totalDuration - m_duration);
-        m_startTime = qMax(0.0, m_startTime);
+    if (!m_eegData) {
+        m_startTime = 0;
+        m_duration = 10;
+        updateChart();
+        return;
     }
+    
+    double totalDuration = m_eegData->duration();
+    
+    m_duration = qMin(duration, totalDuration);
+    m_duration = qMax(0.1, m_duration);
+    
+    m_startTime = qBound(0.0, startTime, totalDuration - m_duration);
     
     updateChart();
     emit timeRangeChanged(m_startTime, m_duration);
@@ -405,7 +415,16 @@ void EEGChartView::keyPressEvent(QKeyEvent *event) {
     }
 }
 
-QColor EEGChartView::getChannelColor(int index) const {
+void EEGChartView::setSelectedChannel(int channel) {
+    m_selectedChannel = channel;
+    updateChart(); 
+}
+
+QColor EEGChartView::getChannelColor(int index, bool isSelected) const {
+    if (isSelected) {
+        return Qt::yellow; 
+    }
+    
     static const QVector<QColor> colors = {
         Qt::blue, Qt::red, Qt::green, Qt::magenta,
         Qt::darkCyan, Qt::darkYellow, Qt::darkMagenta, Qt::darkBlue,
