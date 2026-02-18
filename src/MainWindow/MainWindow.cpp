@@ -376,16 +376,29 @@ void MainWindow::createStatusBar() {
 }
 
 void MainWindow::onFileOpen() {
-    QString filePath = QFileDialog::getOpenFileName(
-        this, "Open EEG Data File", "",
-        "EEG Files (*.edf *.csv *.txt *.dat);;All Files (*)");
+    qDebug() << "BUTTON CLICKED!";
     
-    if (filePath.isEmpty()) return;
+    QString filePath = QFileDialog::getOpenFileName(
+        nullptr,
+        QString("Open EEG Data File"),
+        QDir::homePath(),
+        "EEG Files (*.edf *.csv *.txt *.dat);;All Files (*)",
+        nullptr,
+        QFileDialog::DontUseNativeDialog
+    );
+    
+    qDebug() << "getOpenFileName returned:" << filePath;
+    
+    if (filePath.isEmpty()) {
+        qDebug() << "No file selected";
+        return;
+    }
+    
+    qDebug() << "Selected:" << filePath;
     
     m_progressBar->setVisible(true);
     m_progressBar->setValue(0);
     
-    // Simulate progress (in real app, update from loading thread)
     for (int i = 0; i <= 100; i += 10) {
         m_progressBar->setValue(i);
         QCoreApplication::processEvents();
@@ -393,17 +406,13 @@ void MainWindow::onFileOpen() {
     
     if (m_eegData->loadFromFile(filePath)) {
         m_currentFilePath = filePath;
-
         m_chartView->selectAllChannels();
-
         m_chartView->updateChart();
         setWindowTitle(QString("EEG Data Processor - %1").arg(QFileInfo(filePath).fileName()));
         
-        // Update channel selection spin box
         int channelCount = m_eegData->channelCount();
         m_channelSelectSpin->setRange(0, qMax(0, channelCount - 1));
         
-        // Update display controls
         double duration = m_eegData->duration();
         m_timeDurationSpin->setRange(0.1, qMin(60.0, duration));
         m_timeDurationSpin->setValue(qMin(10.0, duration));
