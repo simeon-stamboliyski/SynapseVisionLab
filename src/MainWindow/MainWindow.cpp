@@ -378,7 +378,7 @@ void MainWindow::createStatusBar() {
 void MainWindow::onFileOpen() {
     QString filePath = QFileDialog::getOpenFileName(
         this, "Open EEG Data File", "",
-        "EEG Files (*.edf *.csv *.txt *.dat);;All Files (*.*)");
+        "EEG Files (*.edf *.csv *.txt *.dat);;All Files (*)");
     
     if (filePath.isEmpty()) return;
     
