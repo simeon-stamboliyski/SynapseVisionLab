@@ -3,7 +3,6 @@ project(SynapseVisionLab)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# Enable AUTOMOC so Qt's meta-object compiler runs automatically
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
@@ -29,7 +28,6 @@ target_link_libraries(SynapseVisionLab
     Qt5::Core
 )
 
-# Add ALL source directories to include path
 target_include_directories(SynapseVisionLab PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -40,3 +38,9 @@ target_include_directories(SynapseVisionLab PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Utils
     ${Qt5Charts_INCLUDE_DIRS}
 )
+
+if(APPLE)
+    set_target_properties(SynapseVisionLab PROPERTIES
+        MACOSX_BUNDLE YES
+    )
+endif()
