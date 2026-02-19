@@ -2,3 +2,143 @@ when you want to compile the application into a mac app use this in the terminal
 make
 /opt/homebrew/opt/qt@5/bin/macdeployqt SynapseVisionLab.app
 codesign --force --deep --sign - SynapseVisionLab.app
+
+Plans for the app:
+
+1. Advanced File Handling
+Batch processing - Load multiple files at once
+
+Recent files list - Quick access to recently opened files
+
+File info panel - Display metadata (sampling rate, recording duration, number of events, etc.)
+
+Export to multiple formats - MAT, EDF+, BrainVision, etc.
+
+2. Event/Marker Support
+Event markers - Display stimulus/response markers on the chart
+
+Event table - List all events with timestamps and types
+
+Event editing - Add, remove, or modify events
+
+Epoch extraction - Extract time-locked epochs around events
+
+3. Advanced Visualization
+Spectrograms - Time-frequency representation
+
+Topographic maps - 2D/3D scalp topography (requires electrode locations)
+
+PSD plots - Power spectral density visualization
+
+Overlay mode - Overlay multiple channels or conditions
+
+Color customization - User-selectable channel colors
+
+Grid customization - Adjustable grid spacing and appearance
+
+4. Signal Processing Enhancements
+ICA/PCA - Independent/Principal Component Analysis for artifact removal
+
+Wavelet denoising - Wavelet-based noise reduction
+
+Baseline correction - Remove baseline drift
+
+Resampling - Change sampling rate
+
+Channel interpolation - Repair bad channels
+
+Reference schemes - More montage options (CAR, REST, etc.)
+
+5. Artifact Detection & Removal
+Automatic artifact detection:
+
+Eye blink detection
+
+Muscle artifact detection
+
+Electrode pop detection
+
+Saturation/clipping detection
+
+Artifact rejection - Remove or interpolate bad segments
+
+Artifact marking - Visually mark artifacts in the chart
+
+6. Analysis Tools
+ERP analysis - Average across trials, plot grand averages
+
+Frequency analysis - FFT, band power calculations
+
+Connectivity measures - Coherence, correlation between channels
+
+Peak detection - Automatic detection of peaks/features
+
+Export statistics - CSV export of all measurements
+
+7. Scripting/ Automation
+MATLAB-like scripting - Simple script editor for batch processing
+
+Pipeline saving - Save and load processing pipelines
+
+Command-line interface - Headless processing for automation
+
+8. User Interface Improvements
+Dockable windows - Fully customizable workspace
+
+Workspace layouts - Save/load UI arrangements
+
+Dark/light themes - Multiple color themes
+
+Keyboard shortcuts - Comprehensive shortcut system
+
+Tooltips - Helpful hints for all controls
+
+Progress indicators - Better feedback for long operations
+
+9. Data Management
+Channel grouping - Group channels by region (frontal, central, etc.)
+
+Channel renaming - User-defined channel labels
+
+Channel notes/annotations - Add notes to channels
+
+Data browser - Browse and preview multiple files
+
+10. Clinical/Research Features
+Clinical reports - Generate PDF reports with findings
+
+Compliance with standards - EDF+ compliance, BIDS format support
+
+Montage templates - Predefined montages for common setups (10-20 system)
+
+Impedance monitoring - Track electrode impedance over time
+
+Prioritization Roadmap
+Phase 1 (Essential):
+Event markers
+
+Basic artifact detection (eye blinks)
+
+Spectrograms
+
+Recent files
+
+Dark theme
+
+Phase 2 (Competitive):
+ICA for artifact removal
+
+Topographic maps
+
+Batch processing
+
+Scripting interface
+
+Phase 3 (Advanced):
+Connectivity analysis
+
+Real-time processing
+
+Plugin system
+
+Online sharing/community features
