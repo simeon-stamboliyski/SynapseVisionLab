@@ -64,6 +64,8 @@ private:
     void createStatusBar();
     
     void applySignalProcessing();
+
+    void onChannelItemChanged(QListWidgetItem *item);
     
 private:
     // Core data and view

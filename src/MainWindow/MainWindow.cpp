@@ -219,14 +219,19 @@ void MainWindow::createDockWidgets() {
     // Channel list dock
     m_channelDock = new QDockWidget("Channels", this);
     m_channelDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    m_channelDock->setFeatures(QDockWidget::DockWidgetMovable | 
-                           QDockWidget::DockWidgetClosable);
-    
+    m_channelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
+
     m_channelList = new QListWidget();
     m_channelList->setSelectionMode(QAbstractItemView::ExtendedSelection);
+
+    // Connect item changes (for checkboxes)
+    connect(m_channelList, &QListWidget::itemChanged, 
+            this, &MainWindow::onChannelItemChanged);
+
+    // Keep the selection changed connection
     connect(m_channelList, &QListWidget::itemSelectionChanged, 
             this, &MainWindow::onChannelListSelectionChanged);
-    
+
     m_channelDock->setWidget(m_channelList);
     addDockWidget(Qt::LeftDockWidgetArea, m_channelDock);
     
@@ -757,6 +762,7 @@ void MainWindow::updateStatusBar() {
 
 void MainWindow::updateChannelList() {
     m_channelList->clear();
+    QVector<int> visibleChannels = m_chartView->getVisibleChannels();
     
     for (int i = 0; i < m_eegData->channelCount(); ++i) {
         const EEGChannel &channel = m_eegData->channel(i);
@@ -769,6 +775,9 @@ void MainWindow::updateChannelList() {
         QListWidgetItem *item = new QListWidgetItem(itemText);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
         item->setCheckState(Qt::Checked);
+        bool isVisible = visibleChannels.contains(i);
+        item->setCheckState(isVisible ? Qt::Checked : Qt::Unchecked);
+
         m_channelList->addItem(item);
     }
     
@@ -804,6 +813,30 @@ void MainWindow::onFileExit() {
 void MainWindow::onChannelSelected() {
     // For now, empty implementation:
     Q_UNUSED(this);
+}
+
+void MainWindow::onChannelItemChanged(QListWidgetItem *item) {
+    if (!item) return;
+    
+    int channelIndex = m_channelList->row(item);
+    bool isChecked = (item->checkState() == Qt::Checked);
+    
+    // Get current visible channels
+    QVector<int> visibleChannels = m_chartView->getVisibleChannels();
+    
+    if (isChecked) {
+        // Add channel if not already visible
+        if (!visibleChannels.contains(channelIndex)) {
+            visibleChannels.append(channelIndex);
+            std::sort(visibleChannels.begin(), visibleChannels.end());
+        }
+    } else {
+        // Remove channel if visible
+        visibleChannels.removeAll(channelIndex);
+    }
+    
+    // Update chart with new visible channels
+    m_chartView->setVisibleChannels(visibleChannels);
 }
 
 void MainWindow::applySignalProcessing() {
