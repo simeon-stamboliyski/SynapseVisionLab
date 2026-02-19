@@ -1,0 +1,4 @@
+when you want to compile the application into a mac app use this in the terminal:
+make
+/opt/homebrew/opt/qt@5/bin/macdeployqt SynapseVisionLab.app
+codesign --force --deep --sign - SynapseVisionLab.app
