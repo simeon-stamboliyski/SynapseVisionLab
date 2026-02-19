@@ -122,33 +122,3 @@ Compliance with standards - EDF+ compliance, BIDS format support
 Montage templates - Predefined montages for common setups (10-20 system)
 
 Impedance monitoring - Track electrode impedance over time
-
-Prioritization Roadmap
-Phase 1 (Essential):
-Event markers
-
-Basic artifact detection (eye blinks)
-
-Spectrograms
-
-Recent files
-
-Dark theme
-
-Phase 2 (Competitive):
-ICA for artifact removal
-
-Topographic maps
-
-Batch processing
-
-Scripting interface
-
-Phase 3 (Advanced):
-Connectivity analysis
-
-Real-time processing
-
-Plugin system
-
-Online sharing/community features
