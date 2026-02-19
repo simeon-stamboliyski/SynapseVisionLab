@@ -78,13 +78,6 @@ static bool loadEDF(const QString &filePath, EEGData &data) {
         return false;
     }
     
-    qDebug() << "=== EDF HEADER ===";
-    qDebug() << "EDF Version:" << version;
-    qDebug() << "Patient ID:" << patientID.trimmed();
-    qDebug() << "Recording:" << recordingInfo.trimmed();
-    qDebug() << "Start:" << startDate.trimmed() << startTime.trimmed();
-    qDebug() << "Number of signals:" << numSignals;
-    
     // ===== READ SIGNAL HEADERS =====
     QVector<QString> labels(numSignals);
     QVector<int> samplesPerRecord(numSignals);
@@ -178,13 +171,8 @@ static bool loadEDF(const QString &filePath, EEGData &data) {
         recordDuration = 1.0; // Default
     }
     
-    qDebug() << "=== SIGNAL INFO ===";
-    qDebug() << "Record duration:" << recordDuration << "seconds";
     for (int i = 0; i < qMin(8, numSignals); ++i) {
         double samplingRate = samplesPerRecord[i] / recordDuration;
-        qDebug() << "Signal" << i << labels[i] 
-                 << "samplesPerRecord:" << samplesPerRecord[i]
-                 << "samplingRate:" << samplingRate << "Hz";
     }
     
     // ===== READ DATA =====
@@ -192,14 +180,12 @@ static bool loadEDF(const QString &filePath, EEGData &data) {
     
     // Get current position (end of headers)
     qint64 headerEndPos = file.pos();
-    qDebug() << "Header ends at position:" << headerEndPos;
     
     // Calculate total samples per record
     int totalSamplesPerRecord = 0;
     for (int i = 0; i < numSignals; ++i) {
         totalSamplesPerRecord += samplesPerRecord[i];
     }
-    qDebug() << "Total samples per record:" << totalSamplesPerRecord;
     
     // Calculate bytes per record (2 bytes per sample in EDF)
     int bytesPerRecord = totalSamplesPerRecord * 2;
@@ -211,14 +197,6 @@ static bool loadEDF(const QString &filePath, EEGData &data) {
     
     // For performance, limit to first N records (temporary)
     numRecords = qMin(numRecords, 10000);
-    
-    qDebug() << "=== FILE INFO ===";
-    qDebug() << "File size:" << fileSize << "bytes";
-    qDebug() << "Data size:" << dataSize << "bytes";
-    qDebug() << "Bytes per record:" << bytesPerRecord;
-    qDebug() << "Total records in file:" << numRecords
-             << "(" << (numRecords * recordDuration) << "seconds)";
-    qDebug() << "Will read" << numRecords << "records";
     
     // Allocate raw data storage
     QVector<QVector<short>> rawData(numSignals);
@@ -262,7 +240,6 @@ static bool loadEDF(const QString &filePath, EEGData &data) {
         }
     }
     
-    qDebug() << "Total samples read:" << totalSamplesRead;
     
     // Convert raw data to EEG channels
     int channelsToLoad = qMin(numSignals, 32); // Limit to 32 channels
@@ -291,7 +268,6 @@ static bool loadEDF(const QString &filePath, EEGData &data) {
             // 1. Use EDF calibration if valid
             scale = (physMax[sig] - physMin[sig]) / (digMax[sig] - digMin[sig]);
             offset = physMin[sig] - digMin[sig] * scale;
-            qDebug() << "Channel" << sig << "EDF calibration: scale=" << scale;
         } 
         else if (!rawData[sig].empty() && rawData[sig].size() > 10) {
             // 2. Dynamic scaling based on data statistics
@@ -311,33 +287,27 @@ static bool loadEDF(const QString &filePath, EEGData &data) {
                 if (range < 100) {  // Already in good µV range
                     scale = 1.0;
                     offset = 0.0;
-                    qDebug() << "Channel" << sig << "small range - assuming µV units";
                 }
                 else if (range > 30000) {  // Full 16-bit range
                     scale = 200.0 / 65536.0;  // Map to ±100µV
                     offset = -mean * scale;
-                    qDebug() << "Channel" << sig << "large range - 16-bit ADC scaling";
                 }
                 else {  // Custom scaling - normalize to reasonable range
                     // Scale to ±50µV range (adjustable)
                     double targetRange = 100.0;  // ±50µV
                     scale = targetRange / range;
                     offset = -mean * scale;
-                    qDebug() << "Channel" << sig << "dynamic: raw=" << minVal << "to" << maxVal 
-                             << "scale=" << scale << "offset=" << offset;
                 }
             } else {
                 // Very small range
                 scale = 1.0;
                 offset = 0.0;
-                qDebug() << "Channel" << sig << "very small range - unit scaling";
             }
         } 
         else {
             // 3. Ultimate fallback
             scale = 1.0;
             offset = 0.0;
-            qDebug() << "Channel" << sig << "fallback scaling";
         }
         // ===== END DYNAMIC SCALING =====
         
@@ -356,12 +326,6 @@ static bool loadEDF(const QString &filePath, EEGData &data) {
             double minVal = *std::min_element(channel.data.begin(), channel.data.end());
             double maxVal = *std::max_element(channel.data.begin(), channel.data.end());
             double meanVal = std::accumulate(channel.data.begin(), channel.data.end(), 0.0) / numSamples;
-            
-            qDebug() << "Channel" << sig << channel.label
-                     << "samples:" << numSamples
-                     << "rate:" << channel.samplingRate << "Hz"
-                     << "range:" << minVal << "to" << maxVal << "µV"
-                     << "mean:" << meanVal << "µV";
         }
     }
     
@@ -379,9 +343,6 @@ static bool loadEDF(const QString &filePath, EEGData &data) {
     }
     
     file.close();
-    qDebug() << "=== LOAD COMPLETE ===";
-    qDebug() << "EDF loaded with" << data.channelCount() << "channels";
-    qDebug() << "Total duration:" << data.duration() << "seconds";
     return true;
 }
 
@@ -463,9 +424,6 @@ static bool loadCSV(const QString &filePath, EEGData &data) {
     QFileInfo info(filePath);
     data.setPatientInfo(info.baseName());
     data.setRecordingInfo("CSV Import");
-    
-    qDebug() << "Loaded CSV with" << numChannels << "channels," 
-             << (channelData.size() > 0 ? channelData[0].size() : 0) << "samples";
     return true;
 }
 
@@ -516,7 +474,6 @@ static bool saveEDF(const QString &filePath, const EEGData &data) {
     // Full EDF implementation would go here
     
     file.close();
-    qDebug() << "Saved basic EDF file with" << numSignals << "channels";
     return true;
 }
 
@@ -543,15 +500,20 @@ static bool saveCSV(const QString &filePath, const EEGData &data) {
     }
     stream << "\n";
     
-    // Find max samples
+    // Find max samples and get actual sampling rate
     int maxSamples = 0;
+    double samplingRate = 250.0; // Default
+    
     for (int i = 0; i < data.channelCount(); ++i) {
         maxSamples = qMax(maxSamples, data.channel(i).data.size());
+        if (data.channel(i).samplingRate > 0) {
+            samplingRate = data.channel(i).samplingRate; // Use actual rate
+        }
     }
     
     // Write data
     for (int sample = 0; sample < maxSamples; ++sample) {
-        double time = sample / 250.0;  // Default sampling rate
+        double time = sample / samplingRate;  // Use actual sampling rate
         stream << QString::number(time, 'f', 6);
         
         for (int ch = 0; ch < data.channelCount(); ++ch) {
@@ -565,9 +527,7 @@ static bool saveCSV(const QString &filePath, const EEGData &data) {
         stream << "\n";
     }
     
-    file.close();
-    qDebug() << "Saved CSV with" << data.channelCount() << "channels," 
-             << maxSamples << "samples";
+    file.close();   
     return true;
 }
 

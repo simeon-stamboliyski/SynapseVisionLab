@@ -81,19 +81,36 @@ void NotchPreviewDialog::onOverwrite() {
 }
 
 void NotchPreviewDialog::onSaveAs() {
-    QString filePath = QFileDialog::getSaveFileName(this,
-        "Save Filtered EEG Data",
-        QFileInfo(m_originalData->fileName()).baseName() + "_notch.edf",
-        "EDF Files (*.edf);;CSV Files (*.csv);;All Files (*)");
     
-    if (!filePath.isEmpty()) {
-        if (m_tempData->saveToFile(filePath)) {
+    QString defaultName = QFileInfo(m_originalData->fileName()).baseName() + "_notch.csv";
+    
+    // Create dialog manually instead of using static function
+    QFileDialog dialog(nullptr);
+    dialog.setWindowTitle("Save Filtered EEG Data");
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setNameFilter("EDF Files (*.edf);;CSV Files (*.csv);;All Files (*)");
+    dialog.selectFile(defaultName);
+    dialog.setOption(QFileDialog::DontUseNativeDialog, true); // Force Qt dialog
+    dialog.setModal(true);
+    
+    // Force it to the front
+    dialog.raise();
+    dialog.activateWindow();
+    
+    if (dialog.exec() == QDialog::Accepted) {
+        QString filePath = dialog.selectedFiles().first();
+        
+        bool success = m_tempData->saveToFile(filePath);
+        
+        if (success) {
             QMessageBox::information(this, "Success", 
-                "Filtered data saved to:\n" + filePath);
+                "Filtered data saved to:\n" + QFileInfo(filePath).absoluteFilePath());
             accept();
         } else {
             QMessageBox::warning(this, "Error", "Failed to save file");
         }
+    } else {
+        qDebug() << "Dialog rejected or cancelled";
     }
 }
 

@@ -26,10 +26,7 @@ EEGChartView::EEGChartView(QWidget *parent)
     
     createChart();
     
-    // Default visible channels
-    for (int i = 0; i < 8; ++i) {
-        m_visibleChannels.append(i);
-    }
+    m_visibleChannels.clear();
 }
 
 EEGChartView::~EEGChartView() {
@@ -103,12 +100,7 @@ bool EEGChartView::isChannelVisible(int channelIndex) const {
 }
 
 void EEGChartView::updateChart() {
-    qDebug() << "=== updateChart called ===";
-    qDebug() << "m_eegData:" << m_eegData;
-    qDebug() << "m_visibleChannels count:" << m_visibleChannels.size();
-    
     if (!m_eegData || m_eegData->isEmpty()) {
-        qDebug() << "No data or data is empty, clearing chart";
         // Clear all series
         for (auto series : m_series) {
             m_chart->removeSeries(series);
@@ -118,12 +110,8 @@ void EEGChartView::updateChart() {
         return;
     }
     
-    qDebug() << "Data exists, channel count:" << m_eegData->channelCount();
-    qDebug() << "Visible channels:" << m_visibleChannels;
-    
     // Check if visible channels are valid
     if (m_visibleChannels.isEmpty()) {
-        qDebug() << "WARNING: No visible channels selected!";
         // Clear chart but don't crash
         for (auto series : m_series) {
             m_chart->removeSeries(series);
@@ -161,7 +149,6 @@ void EEGChartView::updateChart() {
     
     // Create new series for visible channels
     int channelCount = m_eegData->channelCount();
-    qDebug() << "Processing" << m_visibleChannels.size() << "channels";
     
     for (int i = 0; i < m_visibleChannels.size(); ++i) {
         int channelIndex = m_visibleChannels[i];
@@ -180,11 +167,6 @@ void EEGChartView::updateChart() {
             continue;
         }
         
-        qDebug() << "Creating series for channel" << channelIndex 
-                 << "label:" << channel.label 
-                 << "samples:" << channel.data.size()
-                 << "samplingRate:" << channel.samplingRate;
-        
         QLineSeries *series = new QLineSeries();
         series->setName(channel.label);
 
@@ -199,25 +181,19 @@ void EEGChartView::updateChart() {
         startSample = qMax(0, startSample);
         endSample = qMin(channel.data.size() - 1, endSample);
         
-        qDebug() << "Time range:" << m_startTime << "to" << m_startTime + m_duration
-                 << "Sample range:" << startSample << "to" << endSample;
-        
         if (startSample <= endSample) {
             // Downsample for performance
             int step = qMax(1, (endSample - startSample) / 2000);
             double offset = i * m_offsetScale;
             
-            int pointCount = 0;
             for (int s = startSample; s <= endSample; s += step) {
                 // Extra bounds check
                 if (s >= 0 && s < channel.data.size()) {
                     double time = s / channel.samplingRate;
                     double value = channel.data[s] * m_verticalScale + offset;
                     series->append(time, value);
-                    pointCount++;
                 }
             }
-            qDebug() << "Added" << pointCount << "points to series";
         } else {
             qWarning() << "Invalid sample range for channel" << channelIndex;
         }
@@ -238,11 +214,9 @@ void EEGChartView::updateChart() {
         double yMin = 0;
         double yMax = m_visibleChannels.size() * m_offsetScale;
         axisY->setRange(yMin - m_offsetScale * 0.5, yMax + m_offsetScale * 0.5);
-        qDebug() << "Y-axis range:" << yMin - m_offsetScale * 0.5 << "to" << yMax + m_offsetScale * 0.5;
     }
     
     m_chart->update();
-    qDebug() << "Chart update complete. Series count:" << m_series.size();
 }
 
 void EEGChartView::setVisibleChannels(const QVector<int> &channels) {
@@ -309,7 +283,6 @@ void EEGChartView::wheelEvent(QWheelEvent *event) {
         m_verticalScale *= factor;
         m_verticalScale = qBound(0.1, m_verticalScale, 10.0);
         updateChart();
-        qDebug() << "Vertical scale:" << m_verticalScale;
     } 
     else if (event->modifiers() & Qt::ShiftModifier) {
         // Vertical offset adjustment (channel spacing)
@@ -317,7 +290,6 @@ void EEGChartView::wheelEvent(QWheelEvent *event) {
         m_offsetScale *= factor;
         m_offsetScale = qBound(10.0, m_offsetScale, 500.0);
         updateChart();
-        qDebug() << "Offset scale:" << m_offsetScale;
     } 
     else {
         // Horizontal zoom (time)
@@ -351,7 +323,6 @@ void EEGChartView::wheelEvent(QWheelEvent *event) {
         
         updateChart();
         emit timeRangeChanged(m_startTime, m_duration);
-        qDebug() << "Time range:" << m_startTime << "-" << m_startTime + m_duration << "duration:" << m_duration;
     }
     
     event->accept();

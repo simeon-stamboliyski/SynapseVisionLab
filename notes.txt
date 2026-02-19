@@ -7,6 +7,12 @@ codesign --force --deep --sign - SynapseVisionLab.app
 
 ---------------------------------------------------------------------------------
 
+run from terminal command:
+
+./SynapseVisionLab.app/Contents/MacOS/SynapseVisionLab
+
+---------------------------------------------------------------------------------
+
 Plans for the app:
 
 1. Advanced File Handling

@@ -149,7 +149,6 @@ void MainWindow::createActions() {
 }
 
 void MainWindow::onVisibleChannelsChanged(const QVector<int> &channels) {
-    qDebug() << "Visible channels changed. Count:" << channels.size();
     
     // Update the checkboxes in the channel list to match what's visible
     for (int i = 0; i < m_channelList->count(); ++i) {
@@ -259,25 +258,21 @@ void MainWindow::createDockWidgets() {
             [this](int channel) {
         static int lastChannel = -1;
         
-        qDebug() << "Channel value:" << channel;
         
         if (channel == -1) {
             // User selected "None"
             m_chartView->clearSelectedChannel();
             lastChannel = -1;
-            qDebug() << "Selection cleared";
         }
         else if (channel == lastChannel) {
             // Same channel clicked again - deselect
             m_chartView->clearSelectedChannel();
             lastChannel = -1;
             m_channelSelectSpin->setValue(-1);  // Set to "None"
-            qDebug() << "Same channel - clearing selection";
         } else {
             // New channel selected
             m_chartView->setSelectedChannel(channel);
             lastChannel = channel;
-            qDebug() << "Channel selected:" << channel;
         }
     });
     
@@ -473,7 +468,6 @@ void MainWindow::createStatusBar() {
 }
 
 void MainWindow::onFileOpen() {
-    qDebug() << "BUTTON CLICKED!";
     
     QString filePath = QFileDialog::getOpenFileName(
         nullptr,
@@ -484,14 +478,10 @@ void MainWindow::onFileOpen() {
         QFileDialog::DontUseNativeDialog
     );
     
-    qDebug() << "getOpenFileName returned:" << filePath;
     
     if (filePath.isEmpty()) {
-        qDebug() << "No file selected";
         return;
     }
-    
-    qDebug() << "Selected:" << filePath;
     
     m_progressBar->setVisible(true);
     m_progressBar->setValue(0);
@@ -513,17 +503,12 @@ void MainWindow::onFileOpen() {
         m_channelSelectSpin->setValue(-1);
         
         double duration = m_eegData->duration();
-        qDebug() << "=== DURATION DEBUG ===";
-        qDebug() << "File duration:" << duration << "seconds";
-        qDebug() << "Setting m_timeDurationSpin range to: 0.1 -" << duration;
         
         m_timeDurationSpin->blockSignals(true);
         m_timeDurationSpin->setRange(0.1, duration);
         m_timeDurationSpin->setValue(qMin(10.0, duration));
         m_timeDurationSpin->blockSignals(false);
         
-        qDebug() << "Actual max after setting:" << m_timeDurationSpin->maximum();
-        qDebug() << "Actual value after setting:" << m_timeDurationSpin->value();
         
         QMessageBox::information(this, "Success", 
                                 QString("Loaded %1 channels with %2 seconds of data")
@@ -816,26 +801,6 @@ void MainWindow::updateChannelList() {
     // Update channel selection spin box
     int channelCount = m_eegData->channelCount();
     m_channelSelectSpin->setRange(-1, qMax(0, channelCount - 1));
-}
-
-void MainWindow::closeEvent(QCloseEvent *event) {
-    if (m_eegData && !m_eegData->isEmpty()) {
-        QMessageBox::StandardButton reply = QMessageBox::question(
-            this, "Save Changes",
-            "Do you want to save changes before exiting?",
-            QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
-        
-        if (reply == QMessageBox::Save) {
-            onFileSave();
-            event->accept();
-        } else if (reply == QMessageBox::Discard) {
-            event->accept();
-        } else {
-            event->ignore();
-        }
-    } else {
-        event->accept();
-    }
 }
 
 void MainWindow::onFileExit() {
