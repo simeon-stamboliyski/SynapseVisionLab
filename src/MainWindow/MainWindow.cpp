@@ -34,7 +34,6 @@ MainWindow::MainWindow(QWidget *parent)
     createCentralWidget();
     createStatusBar();
     
-    // Connect signals
     connect(m_eegData, &EEGData::dataChanged, this, &MainWindow::updateStatusBar);
     connect(m_eegData, &EEGData::dataChanged, this, &MainWindow::updateChannelList);
     connect(m_eegData, &EEGData::channelAdded, this, &MainWindow::updateChannelList);
@@ -44,6 +43,9 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::onVisibleChannelsChanged);
     
     updateStatusBar();
+    raise();
+    activateWindow();
+    show();
 }
 
 MainWindow::~MainWindow() {
@@ -52,17 +54,17 @@ MainWindow::~MainWindow() {
 
 void MainWindow::createActions() {
     // File actions
-    m_actOpen = new QAction("&Open...", this);  // CHANGED LINE 51
+    m_actOpen = new QAction("&Open...", this);  
     m_actOpen->setShortcut(QKeySequence::Open);
     m_actOpen->setStatusTip("Open EEG data file");
     connect(m_actOpen, &QAction::triggered, this, &MainWindow::onFileOpen);
     
-    m_actSave = new QAction("&Save", this);  // CHANGED LINE 56
+    m_actSave = new QAction("&Save", this); 
     m_actSave->setShortcut(QKeySequence::Save);
     m_actSave->setStatusTip("Save EEG data");
     connect(m_actSave, &QAction::triggered, this, &MainWindow::onFileSave);
     
-    m_actSaveAs = new QAction("Save &As...", this);  // CHANGED LINE 61
+    m_actSaveAs = new QAction("Save &As...", this);  
     m_actSaveAs->setShortcut(QKeySequence::SaveAs);
     m_actSaveAs->setStatusTip("Save EEG data as...");
     connect(m_actSaveAs, &QAction::triggered, this, &MainWindow::onFileSaveAs);
@@ -73,13 +75,13 @@ void MainWindow::createActions() {
     connect(m_actExit, &QAction::triggered, this, &MainWindow::onFileExit);
     
     // View actions
-    m_actShowGrid = new QAction("&Show Grid", this);  // CHANGED LINE 71
+    m_actShowGrid = new QAction("&Show Grid", this);  
     m_actShowGrid->setCheckable(true);
     m_actShowGrid->setChecked(true);
     m_actShowGrid->setStatusTip("Toggle grid display");
     connect(m_actShowGrid, &QAction::toggled, m_chartView, &EEGChartView::setShowGrid);
-    
-    m_actZoomIn = new QAction("Zoom &In", this);  // CHANGED LINE 77
+
+    m_actZoomIn = new QAction("Zoom &In", this); 
     m_actZoomIn->setShortcut(QKeySequence::ZoomIn);
     m_actZoomIn->setStatusTip("Zoom in");
     connect(m_actZoomIn, &QAction::triggered, [this]() {
@@ -95,7 +97,7 @@ void MainWindow::createActions() {
     m_chartView->setTimeRange(m_chartView->currentStartTime(), newDuration);
     });
     
-    m_actPanLeft = new QAction("Pan &Left", this);  // CHANGED LINE 91
+    m_actPanLeft = new QAction("Pan &Left", this);  
     m_actPanLeft->setShortcut(Qt::Key_Left);
     m_actPanLeft->setStatusTip("Pan left");
     connect(m_actPanLeft, &QAction::triggered, [this]() {
@@ -103,7 +105,7 @@ void MainWindow::createActions() {
         m_chartView->setTimeRange(m_chartView->currentStartTime() - duration * 0.1, duration);
     });
     
-    m_actPanRight = new QAction("Pan &Right", this);  // CHANGED LINE 98
+    m_actPanRight = new QAction("Pan &Right", this); 
     m_actPanRight->setShortcut(Qt::Key_Right);
     m_actPanRight->setStatusTip("Pan right");
     connect(m_actPanRight, &QAction::triggered, [this]() {
@@ -112,7 +114,7 @@ void MainWindow::createActions() {
     });
     
     // Tools actions
-    m_actStatistics = new QAction("&Statistics", this);  // CHANGED LINE 106
+    m_actStatistics = new QAction("&Statistics", this);  
     m_actStatistics->setStatusTip("Show channel statistics");
     connect(m_actStatistics, &QAction::triggered, this, &MainWindow::onShowStatistics);
 
@@ -120,6 +122,29 @@ void MainWindow::createActions() {
     m_actAbout->setStatusTip("About EEG Data Processor");
     connect(m_actAbout, &QAction::triggered, this, &MainWindow::onShowAbout);
 
+    m_actShowChannels = new QAction("Channels Panel", this);
+    m_actShowChannels->setMenuRole(QAction::NoRole);
+    m_actShowChannels->setCheckable(true);
+    m_actShowChannels->setChecked(true);
+    m_actShowChannels->setStatusTip("Show/hide channels panel");
+    m_actShowChannels->setVisible(true);
+    connect(m_actShowChannels, &QAction::toggled, [this](bool checked) {
+        if (m_channelDock) {
+            m_channelDock->setVisible(checked);
+        }
+    });
+    
+    m_actShowProcessing = new QAction("Signal Processing Panel", this);
+    m_actShowProcessing->setMenuRole(QAction::NoRole);
+    m_actShowProcessing->setCheckable(true);
+    m_actShowProcessing->setChecked(true);
+    m_actShowProcessing->setStatusTip("Show/hide signal processing panel");
+    m_actShowProcessing->setVisible(true);
+    connect(m_actShowProcessing, &QAction::toggled, [this](bool checked) {
+        if (m_processingDock) {
+            m_processingDock->setVisible(checked);
+        }
+    });
 }
 
 void MainWindow::onVisibleChannelsChanged(const QVector<int> &channels) {
@@ -148,11 +173,14 @@ void MainWindow::createMenus() {
     // View menu
     QMenu *viewMenu = menuBar()->addMenu("&View");
     viewMenu->addAction(m_actShowGrid);
-    viewMenu->addSeparator();
     viewMenu->addAction(m_actZoomIn);
     viewMenu->addAction(m_actZoomOut);
     viewMenu->addAction(m_actPanLeft);
     viewMenu->addAction(m_actPanRight);
+
+    QMenu *panelsMenu = menuBar()->addMenu("&Panels");
+    panelsMenu->addAction(m_actShowChannels);
+    panelsMenu->addAction(m_actShowProcessing);
     
     // Tools menu
     QMenu *toolsMenu = menuBar()->addMenu("&Tools");
@@ -173,11 +201,14 @@ void MainWindow::createToolBars() {
     // View toolbar
     QToolBar *viewToolBar = addToolBar("View");
     viewToolBar->addAction(m_actShowGrid);
-    viewToolBar->addSeparator();
     viewToolBar->addAction(m_actZoomIn);
     viewToolBar->addAction(m_actZoomOut);
     viewToolBar->addAction(m_actPanLeft);
     viewToolBar->addAction(m_actPanRight);
+
+    m_panelToolBar = addToolBar("Panels");
+    m_panelToolBar->addAction(m_actShowChannels);
+    m_panelToolBar->addAction(m_actShowProcessing);
     
     // Tools toolbar
     QToolBar *toolsToolBar = addToolBar("Tools");
@@ -188,6 +219,8 @@ void MainWindow::createDockWidgets() {
     // Channel list dock
     m_channelDock = new QDockWidget("Channels", this);
     m_channelDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    m_channelDock->setFeatures(QDockWidget::DockWidgetMovable | 
+                           QDockWidget::DockWidgetClosable);
     
     m_channelList = new QListWidget();
     m_channelList->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -200,25 +233,51 @@ void MainWindow::createDockWidgets() {
     // Processing dock
     m_processingDock = new QDockWidget("Signal Processing", this);
     m_processingDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    m_processingDock->setFeatures(QDockWidget::DockWidgetMovable | 
+                              QDockWidget::DockWidgetClosable);
     
     m_processingWidget = new QWidget();
     QVBoxLayout *procLayout = new QVBoxLayout(m_processingWidget);
     
     // Channel selection
+    int channelCount = 0;
+    if (m_eegData && !m_eegData->isEmpty()) {
+        channelCount = m_eegData->channelCount();
+    }
     QGroupBox *channelGroup = new QGroupBox("Channel Selection");
     QFormLayout *channelLayout = new QFormLayout(channelGroup);
     m_channelSelectSpin = new QSpinBox();
-    m_channelSelectSpin->setRange(0, 0);
+    m_channelSelectSpin->setRange(-1, qMax(0, channelCount - 1));
+    m_channelSelectSpin->setSpecialValueText("None");  
     m_channelSelectSpin->setValue(0);
     channelLayout->addRow("Channel:", m_channelSelectSpin);
     procLayout->addWidget(channelGroup);
 
     connect(m_channelSelectSpin, QOverload<int>::of(&QSpinBox::valueChanged),
-        [this](int channel) {
-    m_chartView->setSelectedChannel(channel);
-    
-    qDebug() << "Channel selected:" << channel;
-});
+            [this](int channel) {
+        static int lastChannel = -1;
+        
+        qDebug() << "Channel value:" << channel;
+        
+        if (channel == -1) {
+            // User selected "None"
+            m_chartView->clearSelectedChannel();
+            lastChannel = -1;
+            qDebug() << "Selection cleared";
+        }
+        else if (channel == lastChannel) {
+            // Same channel clicked again - deselect
+            m_chartView->clearSelectedChannel();
+            lastChannel = -1;
+            m_channelSelectSpin->setValue(-1);  // Set to "None"
+            qDebug() << "Same channel - clearing selection";
+        } else {
+            // New channel selected
+            m_chartView->setSelectedChannel(channel);
+            lastChannel = channel;
+            qDebug() << "Channel selected:" << channel;
+        }
+    });
     
     // Filter controls
     QGroupBox *filterGroup = new QGroupBox("Filter");
@@ -357,6 +416,16 @@ void MainWindow::createDockWidgets() {
     m_processingDock->setWidget(m_processingWidget);
     addDockWidget(Qt::RightDockWidgetArea, m_processingDock);
 
+    if (m_channelDock && m_actShowChannels) {
+        connect(m_channelDock, &QDockWidget::visibilityChanged,
+                m_actShowChannels, &QAction::setChecked);
+    }
+
+    if (m_processingDock && m_actShowProcessing) {
+        connect(m_processingDock, &QDockWidget::visibilityChanged,
+                m_actShowProcessing, &QAction::setChecked);
+    }
+
     connect(m_timeStartSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
         [this](double) {  // Ignore the value, get fresh from spin box
     m_chartView->setTimeRange(m_timeStartSpin->value(), m_timeDurationSpin->value());
@@ -435,7 +504,9 @@ void MainWindow::onFileOpen() {
         setWindowTitle(QString("EEG Data Processor - %1").arg(QFileInfo(filePath).fileName()));
         
         int channelCount = m_eegData->channelCount();
-        m_channelSelectSpin->setRange(0, qMax(0, channelCount - 1));
+        m_channelSelectSpin->setRange(-1, qMax(0, channelCount - 1));
+        m_channelSelectSpin->setSpecialValueText("None"); 
+        m_channelSelectSpin->setValue(-1);
         
         double duration = m_eegData->duration();
         qDebug() << "=== DURATION DEBUG ===";
@@ -703,7 +774,7 @@ void MainWindow::updateChannelList() {
     
     // Update channel selection spin box
     int channelCount = m_eegData->channelCount();
-    m_channelSelectSpin->setRange(0, qMax(0, channelCount - 1));
+    m_channelSelectSpin->setRange(-1, qMax(0, channelCount - 1));
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {

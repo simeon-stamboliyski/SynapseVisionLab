@@ -420,6 +420,11 @@ void EEGChartView::setSelectedChannel(int channel) {
     updateChart(); 
 }
 
+void EEGChartView::clearSelectedChannel() {
+    m_selectedChannel = -1;
+    updateChart();
+}
+
 QColor EEGChartView::getChannelColor(int index, bool isSelected) const {
     if (isSelected) {
         return Qt::yellow; 

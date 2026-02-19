@@ -30,6 +30,7 @@ public:
     void setOffsetScale(double offset);
     void setShowGrid(bool show);
     void setSelectedChannel(int channel);
+    void clearSelectedChannel();
     
     double currentStartTime() const { return m_startTime; }
     double currentDuration() const { return m_duration; }

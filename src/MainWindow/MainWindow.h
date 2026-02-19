@@ -76,6 +76,8 @@ private:
     
     QDockWidget *m_processingDock;
     QWidget *m_processingWidget;
+
+    QToolBar *m_panelToolBar;
     
     // Processing controls
     QComboBox *m_filterTypeCombo;
@@ -100,6 +102,8 @@ private:
     QAction *m_actExit;
     
     QAction *m_actShowGrid;
+    QAction *m_actShowChannels;
+    QAction *m_actShowProcessing; 
     QAction *m_actZoomIn;
     QAction *m_actZoomOut;
     QAction *m_actPanLeft;
