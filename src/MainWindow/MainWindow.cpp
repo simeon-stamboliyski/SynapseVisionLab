@@ -381,6 +381,10 @@ void MainWindow::createDockWidgets() {
     m_timeStartSpin->setRange(0.0, 1000.0);
     m_timeStartSpin->setValue(0.0);
     m_timeStartSpin->setSuffix(" s");
+
+    m_timeStartSpin->setEnabled(true);
+    m_timeStartSpin->setSingleStep(0.1); 
+    m_timeStartSpin->setKeyboardTracking(true);
     
     m_timeDurationSpin = new QDoubleSpinBox();
     m_timeDurationSpin->setRange(0.1, 3600.0);
@@ -521,27 +525,70 @@ void MainWindow::onFileOpen() {
 }
 
 void MainWindow::onFileSave() {
+    // Check if there's data to save
+    if (!m_eegData || m_eegData->isEmpty()) {
+        QMessageBox::warning(this, "Error", "No data to save");
+        return;
+    }
+    
+    // If no file path (new unsaved file), use Save As instead
     if (m_currentFilePath.isEmpty()) {
         onFileSaveAs();
         return;
     }
     
-    if (m_eegData->saveToFile(m_currentFilePath)) {
-        QMessageBox::information(this, "Success", "Data saved successfully");
-    } else {
-        QMessageBox::warning(this, "Error", "Failed to save data");
+    // Ask for confirmation before overwriting
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this, 
+        "Confirm Save",
+        "This will overwrite the current file. Continue?",
+        QMessageBox::Yes | QMessageBox::No
+    );
+    
+    if (reply == QMessageBox::Yes) {
+        if (m_eegData->saveToFile(m_currentFilePath)) {
+            QMessageBox::information(this, "Success", "Data saved successfully");
+        } else {
+            QMessageBox::warning(this, "Error", "Failed to save data");
+        }
     }
 }
 
 void MainWindow::onFileSaveAs() {
+    // Check if there's data to save
+    if (!m_eegData || m_eegData->isEmpty()) {
+        QMessageBox::warning(this, "Error", "No data to save");
+        return;
+    }
+    
+    // Generate suggested filename based on current file
+    QString baseName = "untitled";
+    if (!m_currentFilePath.isEmpty()) {
+        baseName = QFileInfo(m_currentFilePath).baseName();
+    }
+    
+    // Force Qt dialog (not native macOS dialog)
     QString filePath = QFileDialog::getSaveFileName(
-        this, "Save EEG Data File", m_currentFilePath,
-        "EDF Files (*.edf);;CSV Files (*.csv);;Text Files (*.txt);;All Files (*.*)");
+        this, 
+        "Save EEG Data As",
+        baseName,
+        "EDF Files (*.edf);;CSV Files (*.csv);;Text Files (*.txt);;All Files (*)",
+        nullptr,  // selected filter
+        QFileDialog::DontUseNativeDialog 
+    );
     
-    if (filePath.isEmpty()) return;
+    if (filePath.isEmpty()) {
+        return; // User cancelled
+    }
     
-    m_currentFilePath = filePath;
-    onFileSave();
+    // Save to the new file
+    if (m_eegData->saveToFile(filePath)) {
+        m_currentFilePath = filePath;
+        setWindowTitle(QString("EEG Data Processor - %1").arg(QFileInfo(filePath).fileName()));
+        QMessageBox::information(this, "Success", "Data saved to:\n" + filePath);
+    } else {
+        QMessageBox::warning(this, "Error", "Failed to save file");
+    }
 }
 
 void MainWindow::onFilterApply() {

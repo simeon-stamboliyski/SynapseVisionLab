@@ -1,9 +1,7 @@
 when you want to compile the application into a mac app use this in the terminal:
 
 cmake .. -DCMAKE_PREFIX_PATH=/opt/homebrew/opt/qt@5
-make
-/opt/homebrew/opt/qt@5/bin/macdeployqt SynapseVisionLab.app
-codesign --force --deep --sign - SynapseVisionLab.app
+make && /opt/homebrew/opt/qt@5/bin/macdeployqt SynapseVisionLab.app && codesign --force --deep --sign - SynapseVisionLab.app
 
 ---------------------------------------------------------------------------------
 
