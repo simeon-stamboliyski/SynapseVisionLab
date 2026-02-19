@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "../NotchPreviewDialog/NotchPreviewDialog.h"
 #include <QCoreApplication>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -346,18 +347,20 @@ void MainWindow::createDockWidgets() {
     // Notch filter
     QGroupBox *notchGroup = new QGroupBox("Notch Filter");
     QFormLayout *notchLayout = new QFormLayout(notchGroup);
-    
-    m_notchFreqSpin = new QDoubleSpinBox();
-    m_notchFreqSpin->setRange(50.0, 60.0);
-    m_notchFreqSpin->setValue(50.0);
-    m_notchFreqSpin->setSuffix(" Hz");
-    
+
+    // Frequency selection combo box instead of spin box
+    m_notchFreqCombo = new QComboBox();
+    m_notchFreqCombo->addItem("50 Hz (Europe/Asia)", 50);
+    m_notchFreqCombo->addItem("60 Hz (North America)", 60);
+    m_notchFreqCombo->setCurrentIndex(0);  // Default to 50 Hz
+
+    // Apply button
     QPushButton *notchButton = new QPushButton("Apply Notch Filter");
     connect(notchButton, &QPushButton::clicked, this, &MainWindow::onNotchFilterApply);
-    
-    notchLayout->addRow("Frequency:", m_notchFreqSpin);
+
+    notchLayout->addRow("Frequency:", m_notchFreqCombo);
     notchLayout->addRow(notchButton);
-    
+
     procLayout->addWidget(notchGroup);
     
     // Montage
@@ -621,16 +624,57 @@ void MainWindow::onDCRemoveApply() {
 }
 
 void MainWindow::onNotchFilterApply() {
-    int channel = m_channelSelectSpin->value();
-    double notchFreq = m_notchFreqSpin->value();
+    // Get selected frequency
+    double notchFreq = m_notchFreqCombo->currentData().toDouble();
     
-    if (channel < 0 || channel >= m_eegData->channelCount()) {
-        QMessageBox::warning(this, "Error", "Invalid channel selection");
+    // Check if we have data
+    if (!m_eegData || m_eegData->isEmpty()) {
+        QMessageBox::warning(this, "Error", "No data loaded");
         return;
     }
     
-    m_eegData->applyNotchFilter(channel, notchFreq);
-    m_chartView->updateChart();
+    // Show progress
+    m_progressBar->setVisible(true);
+    m_progressBar->setValue(0);
+    
+    // Create a copy for filtering
+    EEGData *filteredData = new EEGData(this);
+
+    for (int i = 0; i < m_eegData->channelCount(); ++i) {
+        const EEGChannel &originalChannel = m_eegData->channel(i);
+        EEGChannel newChannel;
+        newChannel.label = originalChannel.label;
+        newChannel.samplingRate = originalChannel.samplingRate;
+        newChannel.data = originalChannel.data;  // QVector can be copied
+        filteredData->addChannel(newChannel);
+        m_progressBar->setValue((i + 1) * 50 / m_eegData->channelCount());
+    }
+    
+    // Apply notch filter to all channels or selected channel?
+    int channel = m_channelSelectSpin->value();
+    if (channel >= 0) {
+        filteredData->applyNotchFilter(channel, notchFreq);
+    } else {
+        for (int i = 0; i < filteredData->channelCount(); ++i) {
+            filteredData->applyNotchFilter(i, notchFreq);
+            m_progressBar->setValue(50 + (i + 1) * 50 / filteredData->channelCount());
+            QCoreApplication::processEvents();
+        }
+    }
+    
+    m_progressBar->setVisible(false);
+    
+    // Show preview dialog
+    NotchPreviewDialog dialog(m_eegData, filteredData, notchFreq, this);
+    
+    if (dialog.exec() == QDialog::Accepted) {
+        // If user saved/overwrote, update the chart
+        m_chartView->updateChart();
+        updateChannelList();
+        updateStatusBar();
+    }
+
+    delete filteredData;
 }
 
 void MainWindow::onMontageApply() {

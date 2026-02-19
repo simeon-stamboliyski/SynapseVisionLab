@@ -86,7 +86,7 @@ private:
     QDoubleSpinBox *m_highCutSpin;
     QDoubleSpinBox *m_gainSpin;
     QDoubleSpinBox *m_offsetSpin;
-    QDoubleSpinBox *m_notchFreqSpin;
+    QComboBox *m_notchFreqCombo;
     QComboBox *m_montageCombo;
     QSpinBox *m_channelSelectSpin;
     

@@ -15,11 +15,13 @@ add_executable(SynapseVisionLab
     src/Visualization/EEGChartView.cpp
     src/DataModels/EEGData.cpp
     src/FileHandlers/EEGFileHandler.cpp
+    src/NotchPreviewDialog/NotchPreviewDialog.cpp 
     src/MainWindow/MainWindow.h
     src/Visualization/EEGChartView.h
     src/DataModels/EEGData.h
     src/FileHandlers/EEGFileHandler.h
     src/Utils/SignalProcessor.h
+    src/NotchPreviewDialog/NotchPreviewDialog.h 
 )
 
 target_link_libraries(SynapseVisionLab
@@ -36,6 +38,7 @@ target_include_directories(SynapseVisionLab PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DataModels
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FileHandlers
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Utils
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NotchPreviewDialog 
     ${Qt5Charts_INCLUDE_DIRS}
 )
 

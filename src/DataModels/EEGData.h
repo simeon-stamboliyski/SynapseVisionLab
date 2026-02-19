@@ -36,6 +36,52 @@ public:
     bool saveToFile(const QString &filePath);
     void clear();
 
+    EEGData* clone() const {
+        EEGData *newData = new EEGData();
+        newData->m_patientInfo = this->m_patientInfo;
+        newData->m_recordingInfo = this->m_recordingInfo;
+        newData->m_startDateTime = this->m_startDateTime;
+        
+        // Deep copy channels
+        for (const EEGChannel &ch : m_channels) {
+            EEGChannel newChannel;
+            newChannel.label = ch.label;
+            newChannel.samplingRate = ch.samplingRate;
+            newChannel.physicalMin = ch.physicalMin;
+            newChannel.physicalMax = ch.physicalMax;
+            newChannel.digitalMin = ch.digitalMin;
+            newChannel.digitalMax = ch.digitalMax;
+            newChannel.data = ch.data;  // QVector copies its data
+            newData->m_channels.append(newChannel);
+        }
+        
+        return newData;
+    }
+    
+    // Copy data from another EEGData object
+    void copyFrom(const EEGData *other) {
+        if (!other) return;
+        
+        clear();
+        m_patientInfo = other->m_patientInfo;
+        m_recordingInfo = other->m_recordingInfo;
+        m_startDateTime = other->m_startDateTime;
+        
+        for (const EEGChannel &ch : other->m_channels) {
+            EEGChannel newChannel;
+            newChannel.label = ch.label;
+            newChannel.samplingRate = ch.samplingRate;
+            newChannel.physicalMin = ch.physicalMin;
+            newChannel.physicalMax = ch.physicalMax;
+            newChannel.digitalMin = ch.digitalMin;
+            newChannel.digitalMax = ch.digitalMax;
+            newChannel.data = ch.data;
+            m_channels.append(newChannel);
+        }
+        
+        emit dataChanged();
+    }
+
     // Data manipulation
     void addChannel(const EEGChannel &channel);
     void removeChannel(int index);
@@ -61,6 +107,9 @@ public:
     QVector<double> channelStdDevs() const;
     QVector<double> getTimeSeries(int channelIndex, double startTime, double duration) const;
 
+    QString fileName() const { return m_fileName; }
+    void setFileName(const QString &name) { m_fileName = name; }
+
     // Metadata
     QString patientInfo() const { return m_patientInfo; }
     void setPatientInfo(const QString &info) { m_patientInfo = info; }
@@ -83,4 +132,5 @@ private:
     QString m_patientInfo;
     QString m_recordingInfo;
     QDateTime m_startDateTime;
+    QString m_fileName;
 };
