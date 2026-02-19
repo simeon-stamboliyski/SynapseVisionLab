@@ -222,15 +222,11 @@ void MainWindow::createDockWidgets() {
     m_channelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
 
     m_channelList = new QListWidget();
-    m_channelList->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    m_channelList->setSelectionMode(QAbstractItemView::NoSelection);
 
     // Connect item changes (for checkboxes)
     connect(m_channelList, &QListWidget::itemChanged, 
             this, &MainWindow::onChannelItemChanged);
-
-    // Keep the selection changed connection
-    connect(m_channelList, &QListWidget::itemSelectionChanged, 
-            this, &MainWindow::onChannelListSelectionChanged);
 
     m_channelDock->setWidget(m_channelList);
     addDockWidget(Qt::LeftDockWidgetArea, m_channelDock);
@@ -432,7 +428,7 @@ void MainWindow::createDockWidgets() {
     }
 
     connect(m_timeStartSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-        [this](double) {  // Ignore the value, get fresh from spin box
+        [this](double) {  
     m_chartView->setTimeRange(m_timeStartSpin->value(), m_timeDurationSpin->value());
     });
 
@@ -654,14 +650,6 @@ void MainWindow::onMontageApply() {
     
     m_chartView->updateChart();
     updateChannelList();
-}
-
-void MainWindow::onChannelListSelectionChanged() {
-    QVector<int> selectedChannels;
-    for (auto item : m_channelList->selectedItems()) {
-        selectedChannels.append(m_channelList->row(item));
-    }
-    m_chartView->setVisibleChannels(selectedChannels);
 }
 
 void MainWindow::onTimeRangeChanged(double start, double duration) {

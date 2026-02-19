@@ -102,21 +102,8 @@ bool EEGChartView::isChannelVisible(int channelIndex) const {
     return m_visibleChannels.contains(channelIndex);
 }
 
-void EEGChartView::ensureVisibleChannels() {
-    // If no channels are visible, select first 8 by default
-    if (m_visibleChannels.isEmpty() && m_eegData && !m_eegData->isEmpty()) {
-        int defaultChannels = qMin(8, m_eegData->channelCount());
-        for (int i = 0; i < defaultChannels; ++i) {
-            m_visibleChannels.append(i);
-        }
-        qDebug() << "No channels selected, defaulting to first" << defaultChannels;
-    }
-}
-
 void EEGChartView::updateChart() {
     qDebug() << "=== updateChart called ===";
-
-    ensureVisibleChannels();
     qDebug() << "m_eegData:" << m_eegData;
     qDebug() << "m_visibleChannels count:" << m_visibleChannels.size();
     
@@ -304,24 +291,69 @@ void EEGChartView::setShowGrid(bool show) {
 }
 
 void EEGChartView::wheelEvent(QWheelEvent *event) {
+    // Just scroll up	Zoom in on chart where mouse is pointing
+    // Just scroll down	Zoom out from where mouse is pointing
+    // Ctrl + scroll up	Make waves bigger (amplitude)
+    // Ctrl + scroll down	Make waves smaller
+    // Shift + scroll up	Spread channels apart
+    // Shift + scroll down	Squeeze channels together
+    // Scroll with no data	Nothing
+
+    // Get zoom direction (positive = zoom in, negative = zoom out)
+    int delta = event->angleDelta().y();
+    if (delta == 0) return; // Ignore horizontal scrolling
+    
     if (event->modifiers() & Qt::ControlModifier) {
-        // Vertical zoom
-        double factor = event->angleDelta().y() > 0 ? 1.1 : 0.9;
+        // Vertical zoom (amplitude)
+        double factor = (delta > 0) ? 1.1 : 0.9;
         m_verticalScale *= factor;
+        m_verticalScale = qBound(0.1, m_verticalScale, 10.0);
         updateChart();
-    } else if (event->modifiers() & Qt::ShiftModifier) {
-        // Vertical offset adjustment
-        double factor = event->angleDelta().y() > 0 ? 1.1 : 0.9;
+        qDebug() << "Vertical scale:" << m_verticalScale;
+    } 
+    else if (event->modifiers() & Qt::ShiftModifier) {
+        // Vertical offset adjustment (channel spacing)
+        double factor = (delta > 0) ? 1.1 : 0.9;
         m_offsetScale *= factor;
+        m_offsetScale = qBound(10.0, m_offsetScale, 500.0);
         updateChart();
-    } else {
-        // Horizontal zoom
-        double factor = event->angleDelta().y() > 0 ? 0.8 : 1.2;
-        m_duration *= factor;
-        m_duration = qMax(0.1, qMin(60.0, m_duration)); // Limit between 0.1-60 seconds
+        qDebug() << "Offset scale:" << m_offsetScale;
+    } 
+    else {
+        // Horizontal zoom (time)
+        if (!m_eegData) return;
+        
+        double maxDuration = m_eegData->duration();
+        double cursorTime = 0;
+        
+        // Try to get cursor position for zoom-to-cursor effect (optional)
+        QPointF mousePos = event->position();
+        QPointF chartPoint = m_chart->mapToValue(mousePos.toPoint());
+        cursorTime = chartPoint.x();
+        
+        // Calculate zoom factor based on scroll direction
+        double factor = (delta > 0) ? 0.8 : 1.25; // Zoom in = 0.8, Zoom out = 1.25
+        double newDuration = m_duration * factor;
+        
+        // Bound the duration
+        newDuration = qBound(0.1, newDuration, maxDuration);
+        
+        // Zoom toward cursor if possible
+        if (cursorTime >= m_startTime && cursorTime <= m_startTime + m_duration) {
+            // Calculate new start time to keep cursor at same relative position
+            double cursorRatio = (cursorTime - m_startTime) / m_duration;
+            m_startTime = cursorTime - cursorRatio * newDuration;
+        }
+        
+        // Ensure start time stays within bounds
+        m_startTime = qBound(0.0, m_startTime, maxDuration - newDuration);
+        m_duration = newDuration;
+        
         updateChart();
         emit timeRangeChanged(m_startTime, m_duration);
+        qDebug() << "Time range:" << m_startTime << "-" << m_startTime + m_duration << "duration:" << m_duration;
     }
+    
     event->accept();
 }
 
