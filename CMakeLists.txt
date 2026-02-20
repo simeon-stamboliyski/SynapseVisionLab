@@ -38,11 +38,35 @@ target_include_directories(SynapseVisionLab PRIVATE
     "/opt/homebrew/include"
 )
 
+find_path(IIR1_INCLUDE_DIR
+    NAMES iir/Butterworth.h
+    PATHS /opt/homebrew/include /usr/local/include
+)
+
+find_library(IIR1_LIBRARY
+    NAMES iir iir1
+    PATHS /opt/homebrew/lib /usr/local/lib
+)
+
+if(IIR1_INCLUDE_DIR AND IIR1_LIBRARY)
+    message(STATUS "Found IIR1: ${IIR1_INCLUDE_DIR}")
+    message(STATUS "IIR1 library: ${IIR1_LIBRARY}")
+    target_include_directories(SynapseVisionLab PRIVATE ${IIR1_INCLUDE_DIR})
+    target_link_libraries(SynapseVisionLab ${IIR1_LIBRARY})
+else()
+    message(WARNING "IIR1 not found - bandpass filter will be disabled")
+endif()
+
+# Find Eigen3 (after target is created)
+find_package(Eigen3 REQUIRED)
+
 # Link everything
 target_link_libraries(SynapseVisionLab
     Qt5::Widgets
     Qt5::Charts
     Qt5::PrintSupport
+    Eigen3::Eigen
+    ${IIR1_LIBRARY}
     "/opt/homebrew/lib/libfftw3.dylib"
 )
 

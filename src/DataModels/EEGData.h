@@ -88,7 +88,13 @@ public:
     void normalizeChannel(int channelIndex);
     void applyGain(int channelIndex, double gain);
     void applyOffset(int channelIndex, double offset);
-    void applyFilter(int channelIndex, double lowCut, double highCut);
+    void applyFilter(int channelIndex, double lowCut, double highCut) {
+        if (channelIndex < 0 || channelIndex >= m_channels.size()) return;
+        SignalProcessor::bandpassFilter(m_channels[channelIndex].data, 
+                                        m_channels[channelIndex].samplingRate, 
+                                        lowCut, highCut);
+        emit dataChanged();
+    }
     void removeDC(int channelIndex);
 
     // Data access
@@ -120,7 +126,32 @@ public:
     QDateTime startDateTime() const { return m_startDateTime; }
     void setStartDateTime(const QDateTime &dt) { m_startDateTime = dt; }
 
-    void applyMontage(SignalProcessor::MontageType montage);
+    void applyMontage(SignalProcessor::MontageType montage) {
+        // Collect all channel data
+        QVector<QVector<double>> allData;
+        QVector<QString> labels;
+        QVector<double> samplingRates;
+
+        for (const auto &ch : m_channels) {
+            allData.append(ch.data);
+            labels.append(ch.label);
+        }
+        
+        // Apply montage
+        SignalProcessor::applyMontage(allData, labels, montage);
+        
+        // Update channels
+        m_channels.clear();
+        for (int i = 0; i < allData.size(); ++i) {
+            EEGChannel ch;
+            ch.data = allData[i];
+            ch.label = labels[i];
+            ch.samplingRate = samplingRates[i];
+            m_channels.append(ch);
+        }
+        emit dataChanged();
+    }
+
     void applyNotchFilter(int channelIndex, double notchFreq);
 signals:
     void dataChanged();

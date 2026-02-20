@@ -105,15 +105,6 @@ void EEGData::applyOffset(int channelIndex, double offset) {
     emit dataChanged();
 }
 
-void EEGData::applyFilter(int channelIndex, double lowCut, double highCut) {
-    if (channelIndex < 0 || channelIndex >= m_channels.size()) return;
-    
-    EEGChannel &channel = m_channels[channelIndex];
-    SignalProcessor::bandpassFilter(channel.data, channel.samplingRate, lowCut, highCut);
-    
-    emit dataChanged();
-}
-
 void EEGData::removeDC(int channelIndex) {
     if (channelIndex < 0 || channelIndex >= m_channels.size()) return;
     
@@ -157,27 +148,7 @@ QVector<double> EEGData::getTimeSeries(int channelIndex, double startTime, doubl
     return SignalProcessor::extractTimeWindow(channel.data, channel.samplingRate, startTime, duration);
 }
 
-// Add new method for montage support
-void EEGData::applyMontage(SignalProcessor::MontageType montage) {
-    QVector<QVector<double>> allData;
-    QVector<QString> labels;
-    
-    for (const auto &channel : m_channels) {
-        allData.append(channel.data);
-        labels.append(channel.label);
-    }
-    
-    SignalProcessor::applyMontage(allData, labels, montage);
-    
-    // Update channels with processed data
-    for (int i = 0; i < m_channels.size() && i < allData.size(); ++i) {
-        m_channels[i].data = allData[i];
-    }
-    
-    emit dataChanged();
-}
 
-// Add new method for notch filtering
 void EEGData::applyNotchFilter(int channelIndex, double notchFreq) {
     if (channelIndex < 0 || channelIndex >= m_channels.size()) return;
     
