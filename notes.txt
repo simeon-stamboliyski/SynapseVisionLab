@@ -32,7 +32,6 @@ Event editing - Add, remove, or modify events
 Epoch extraction - Extract time-locked epochs around events
 
 3. Advanced Visualization
-Spectrograms - Time-frequency representation
 
 Topographic maps - 2D/3D scalp topography (requires electrode locations)
 
