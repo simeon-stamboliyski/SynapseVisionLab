@@ -195,7 +195,6 @@ static bool loadEDF(const QString &filePath, EEGData &data) {
     qint64 dataSize = fileSize - headerEndPos;
     int numRecords = dataSize / bytesPerRecord;
     
-    // For performance, limit to first N records (temporary)
     numRecords = qMin(numRecords, 10000);
     
     // Allocate raw data storage

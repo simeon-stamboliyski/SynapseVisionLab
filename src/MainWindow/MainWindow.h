@@ -50,6 +50,10 @@ private slots:
     
     void updateStatusBar();
     void updateChannelList();
+
+    void showPowerSpectrum(int channelIndex, int windowSizeIndex);
+    void showBandPower(int channelIndex);
+    void showSpectrogram(int channelIndex);
     
 private:
     void createActions();
@@ -58,8 +62,6 @@ private:
     void createDockWidgets();
     void createCentralWidget();
     void createStatusBar();
-    
-    void applySignalProcessing();
 
     void onChannelItemChanged(QListWidgetItem *item);
     

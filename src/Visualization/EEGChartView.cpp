@@ -298,7 +298,6 @@ void EEGChartView::wheelEvent(QWheelEvent *event) {
         double maxDuration = m_eegData->duration();
         double cursorTime = 0;
         
-        // Try to get cursor position for zoom-to-cursor effect (optional)
         QPointF mousePos = event->position();
         QPointF chartPoint = m_chart->mapToValue(mousePos.toPoint());
         cursorTime = chartPoint.x();

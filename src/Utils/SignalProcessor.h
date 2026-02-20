@@ -1,4 +1,5 @@
 #pragma once
+#include <fftw3.h>
 #include <QVector>
 #include <cmath>
 #include <algorithm>
@@ -235,27 +236,38 @@ inline void applyMontage(QVector<QVector<double>> &allChannelData,
 
 // ================== FREQUENCY ANALYSIS ==================
 
-// Simple FFT (using DFT for simplicity - use FFTW or KFR in production)
-inline QVector<double> powerSpectrum(const QVector<double> &data, 
-                                    double samplingRate) {
+inline QVector<double> powerSpectrum(const QVector<double> &data, double samplingRate) {
     QVector<double> spectrum;
     if (data.isEmpty() || samplingRate <= 0) return spectrum;
     
     int N = data.size();
     spectrum.resize(N/2 + 1);
     
-    for (int k = 0; k <= N/2; ++k) {
-        double real = 0.0;
-        double imag = 0.0;
-        
-        for (int n = 0; n < N; ++n) {
-            double angle = 2.0 * M_PI * k * n / N;
-            real += data[n] * cos(angle);
-            imag -= data[n] * sin(angle);
-        }
-        
-        spectrum[k] = sqrt(real*real + imag*imag) / N;
+    // FFTW plans
+    fftw_complex *in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
+    fftw_complex *out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
+    
+    // Copy data
+    for (int i = 0; i < N; ++i) {
+        in[i][0] = data[i];
+        in[i][1] = 0.0;
     }
+    
+    // Execute FFT
+    fftw_plan p = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+    fftw_execute(p);
+    
+    // Calculate power spectrum
+    for (int i = 0; i <= N/2; ++i) {
+        double real = out[i][0];
+        double imag = out[i][1];
+        spectrum[i] = sqrt(real*real + imag*imag) / N;
+    }
+    
+    // Cleanup
+    fftw_destroy_plan(p);
+    fftw_free(in);
+    fftw_free(out);
     
     return spectrum;
 }
@@ -292,4 +304,4 @@ inline BandPower calculateBandPower(const QVector<double> &data,
     return power;
 }
 
-} // namespace SignalProcessor
+}

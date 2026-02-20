@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include "../NotchPreviewDialog/NotchPreviewDialog.h"
+#include "qcustomplot.h"
 #include <QCoreApplication>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -17,6 +18,7 @@
 #include <QDateTime>
 #include <QCloseEvent>
 #include <cmath>
+#include <numeric>
 #include <algorithm>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -234,8 +236,13 @@ void MainWindow::createDockWidgets() {
     // Processing dock
     m_processingDock = new QDockWidget("Signal Processing", this);
     m_processingDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    m_processingDock->setFeatures(QDockWidget::DockWidgetMovable | 
-                              QDockWidget::DockWidgetClosable);
+    m_processingDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
+
+    // Create a scroll area
+    QScrollArea *scrollArea = new QScrollArea();
+    scrollArea->setWidgetResizable(true);  // Critical!
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     
     m_processingWidget = new QWidget();
     QVBoxLayout *procLayout = new QVBoxLayout(m_processingWidget);
@@ -445,6 +452,84 @@ void MainWindow::createDockWidgets() {
     connect(m_offsetScaleSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             m_chartView, &EEGChartView::setOffsetScale);
 
+    // Frequency Analysis Group
+    QGroupBox *freqGroup = new QGroupBox("Frequency Analysis");
+    QFormLayout *freqLayout = new QFormLayout(freqGroup);
+
+    // Channel selection for frequency analysis
+    QComboBox *freqChannelCombo = new QComboBox();
+    freqChannelCombo->setObjectName("freqChannelCombo"); 
+    freqChannelCombo->addItem("All Channels", -1);
+    for (int i = 0; i < m_eegData->channelCount(); ++i) {
+        const EEGChannel &channel = m_eegData->channel(i);
+        freqChannelCombo->addItem(QString("%1: %2").arg(i).arg(channel.label), i);
+    }
+
+    // Window size for FFT - ADD ALL OPTIONS HERE
+    QComboBox *windowSizeCombo = new QComboBox();
+    windowSizeCombo->addItem("256 samples", 256);
+    windowSizeCombo->addItem("512 samples", 512);
+    windowSizeCombo->addItem("1024 samples", 1024);
+    windowSizeCombo->addItem("2048 samples", 2048);
+    windowSizeCombo->addItem("4096 samples", 4096);
+    windowSizeCombo->addItem("8192 samples", 8192);
+    windowSizeCombo->addItem("16384 samples", 16384);
+    windowSizeCombo->addItem("32768 samples", 32768);
+    windowSizeCombo->addItem("65536 samples", 65536);
+    windowSizeCombo->addItem("131072 samples", 131072);
+    windowSizeCombo->setCurrentIndex(4); // Default to 4096
+
+    // Frequency range display (updates based on sampling rate)
+    QLabel *freqRangeLabel = new QLabel();
+    if (!m_eegData->isEmpty()) {
+        double maxFreq = m_eegData->channel(0).samplingRate / 2;
+        freqRangeLabel->setText(QString("Frequency Range: 0-%1 Hz").arg(maxFreq, 0, 'f', 1));
+    } else {
+        freqRangeLabel->setText("Frequency Range: 0-125 Hz (default)");
+    }
+
+    // Buttons for different analyses
+    QPushButton *powerSpectrumBtn = new QPushButton("Show Power Spectrum");
+    QPushButton *bandPowerBtn = new QPushButton("Show Band Powers");
+    QPushButton *spectrogramBtn = new QPushButton("Show Spectrogram");
+
+    freqLayout->addRow("Channel:", freqChannelCombo);
+    freqLayout->addRow("FFT Window:", windowSizeCombo);
+    freqLayout->addRow(freqRangeLabel);
+    freqLayout->addRow(powerSpectrumBtn);
+    freqLayout->addRow(bandPowerBtn);
+    freqLayout->addRow(spectrogramBtn);
+
+    procLayout->addWidget(freqGroup);
+
+    // Store combo boxes as member variables if needed for later access
+    // For now, capture them in lambdas
+
+    // Connect buttons
+    connect(powerSpectrumBtn, &QPushButton::clicked, [this, freqChannelCombo, windowSizeCombo]() {
+        int channelIndex = freqChannelCombo->currentData().toInt();
+        int windowSizeIndex = windowSizeCombo->currentIndex(); // Use index, not value
+        showPowerSpectrum(channelIndex, windowSizeIndex);
+    });
+
+    connect(bandPowerBtn, &QPushButton::clicked, [this, freqChannelCombo]() {
+        int channelIndex = freqChannelCombo->currentData().toInt();
+        showBandPower(channelIndex);
+    });
+
+    connect(spectrogramBtn, &QPushButton::clicked, [this, freqChannelCombo]() {
+        int channelIndex = freqChannelCombo->currentData().toInt();
+        showSpectrogram(channelIndex);
+    });
+
+    procLayout->addStretch(); 
+
+    // Set the processing widget as the scroll area's widget
+    scrollArea->setWidget(m_processingWidget);
+
+    // Set the scroll area as the dock widget's widget
+    m_processingDock->setWidget(scrollArea);
+    addDockWidget(Qt::RightDockWidgetArea, m_processingDock);
 }
 
 void MainWindow::createCentralWidget() {
@@ -512,7 +597,16 @@ void MainWindow::onFileOpen() {
         m_timeDurationSpin->setRange(0.1, duration);
         m_timeDurationSpin->setValue(qMin(10.0, duration));
         m_timeDurationSpin->blockSignals(false);
-        
+
+        QComboBox *freqChannelCombo = findChild<QComboBox*>("freqChannelCombo"); // If you set object name
+        if (freqChannelCombo) {
+            freqChannelCombo->clear();
+            freqChannelCombo->addItem("All Channels", -1);
+            for (int i = 0; i < m_eegData->channelCount(); ++i) {
+                const EEGChannel &channel = m_eegData->channel(i);
+                freqChannelCombo->addItem(QString("%1: %2").arg(i).arg(channel.label), i);
+            }
+        }
         
         QMessageBox::information(this, "Success", 
                                 QString("Loaded %1 channels with %2 seconds of data")
@@ -749,15 +843,18 @@ void MainWindow::onShowStatistics() {
     
     QDialog statsDialog(this);
     statsDialog.setWindowTitle("Channel Statistics");
-    statsDialog.resize(600, 400);
+    statsDialog.resize(800, 500);  // Made wider
     
     QVBoxLayout *layout = new QVBoxLayout(&statsDialog);
     
+    // Add more columns for min/max
     QTableWidget *table = new QTableWidget();
-    table->setColumnCount(8);
-    table->setHorizontalHeaderLabels({"Channel", "Label", "Samples", 
-                                      "Rate (Hz)", "Mean (μV)", "StdDev (μV)", 
-                                      "Min (μV)", "Max (μV)"});
+    table->setColumnCount(10);  // Increased from 8
+    table->setHorizontalHeaderLabels({
+        "Channel", "Label", "Samples", "Rate (Hz)", 
+        "Mean (μV)", "StdDev (μV)", "Min (μV)", "Max (μV)",
+        "Peak-Peak", "Variance"
+    });
     
     int channelCount = m_eegData->channelCount();
     table->setRowCount(channelCount);
@@ -768,16 +865,22 @@ void MainWindow::onShowStatistics() {
     for (int i = 0; i < channelCount; ++i) {
         const EEGChannel &channel = m_eegData->channel(i);
         
+        auto minMax = std::minmax_element(channel.data.begin(), channel.data.end());
+        double minVal = *minMax.first;
+        double maxVal = *minMax.second;
+        double peakToPeak = maxVal - minVal;
+        double variance = stddevs[i] * stddevs[i];
+        
         table->setItem(i, 0, new QTableWidgetItem(QString::number(i + 1)));
         table->setItem(i, 1, new QTableWidgetItem(channel.label));
         table->setItem(i, 2, new QTableWidgetItem(QString::number(channel.data.size())));
         table->setItem(i, 3, new QTableWidgetItem(QString::number(channel.samplingRate, 'f', 1)));
         table->setItem(i, 4, new QTableWidgetItem(QString::number(means[i], 'f', 2)));
         table->setItem(i, 5, new QTableWidgetItem(QString::number(stddevs[i], 'f', 2)));
-        
-        auto minMax = std::minmax_element(channel.data.begin(), channel.data.end());
-        table->setItem(i, 6, new QTableWidgetItem(QString::number(*minMax.first, 'f', 2)));
-        table->setItem(i, 7, new QTableWidgetItem(QString::number(*minMax.second, 'f', 2)));
+        table->setItem(i, 6, new QTableWidgetItem(QString::number(minVal, 'f', 2)));  // Min
+        table->setItem(i, 7, new QTableWidgetItem(QString::number(maxVal, 'f', 2)));  // Max
+        table->setItem(i, 8, new QTableWidgetItem(QString::number(peakToPeak, 'f', 2)));  // Peak-Peak
+        table->setItem(i, 9, new QTableWidgetItem(QString::number(variance, 'f', 2)));  // Variance
     }
     
     table->resizeColumnsToContents();
@@ -883,7 +986,316 @@ void MainWindow::onChannelItemChanged(QListWidgetItem *item) {
     m_chartView->setVisibleChannels(visibleChannels);
 }
 
-void MainWindow::applySignalProcessing() {
-    // Empty placeholder or implement as needed
-    Q_UNUSED(this);
+void MainWindow::showPowerSpectrum(int channelIndex, int windowSizeIndex) {
+    if (m_eegData->isEmpty()) {
+        QMessageBox::warning(this, "Error", "No data loaded");
+        return;
+    }
+    
+    // Determine window size
+    int windowSizes[] = {256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072};
+    int windowSize = windowSizes[windowSizeIndex];
+    
+    // Create dialog
+    QDialog spectrumDialog(this);
+    spectrumDialog.setWindowTitle("Power Spectrum");
+    spectrumDialog.resize(800, 600);
+    
+    QVBoxLayout *layout = new QVBoxLayout(&spectrumDialog);
+    
+    // Create chart view for spectrum
+    QChartView *chartView = new QChartView();
+    chartView->setRenderHint(QPainter::Antialiasing);
+    
+    QChart *chart = new QChart();
+    chart->setTitle(channelIndex >= 0 
+        ? QString("Power Spectrum - Channel %1").arg(channelIndex)
+        : "Power Spectrum - All Channels (Average)");
+    
+    if (channelIndex >= 0) {
+        // Single channel spectrum
+        const EEGChannel &channel = m_eegData->channel(channelIndex);
+        
+        // Take a window of data
+        int startSample = 0;
+        int endSample = std::min(windowSize, channel.data.size());
+        QVector<double> windowData(channel.data.begin() + startSample, 
+                                   channel.data.begin() + endSample);
+        
+        // Calculate spectrum
+        QVector<double> spectrum = SignalProcessor::powerSpectrum(windowData, channel.samplingRate);
+        
+        // Create series
+        QLineSeries *series = new QLineSeries();
+        series->setName(channel.label);
+        
+        double freqResolution = channel.samplingRate / (2.0 * spectrum.size());
+        for (int i = 0; i < spectrum.size(); ++i) {
+            double freq = i * freqResolution;
+            series->append(freq, spectrum[i]);
+        }
+        
+        chart->addSeries(series);
+        
+        // Create axes
+        QValueAxis *axisX = new QValueAxis();
+        axisX->setTitleText("Frequency (Hz)");
+        axisX->setRange(0, channel.samplingRate / 2);
+        
+        QValueAxis *axisY = new QValueAxis();
+        axisY->setTitleText("Amplitude");
+        
+        chart->addAxis(axisX, Qt::AlignBottom);
+        chart->addAxis(axisY, Qt::AlignLeft);
+        series->attachAxis(axisX);
+        series->attachAxis(axisY);
+    } else {
+        // Average spectrum across all channels
+        QVector<double> avgSpectrum;
+        
+        for (int ch = 0; ch < m_eegData->channelCount(); ++ch) {
+            const EEGChannel &channel = m_eegData->channel(ch);
+            
+            int startSample = 0;
+            int endSample = std::min(windowSize, channel.data.size());
+            QVector<double> windowData(channel.data.begin() + startSample, 
+                                       channel.data.begin() + endSample);
+            
+            QVector<double> spectrum = SignalProcessor::powerSpectrum(windowData, channel.samplingRate);
+            
+            if (ch == 0) {
+                avgSpectrum = spectrum;
+            } else {
+                for (int i = 0; i < spectrum.size(); ++i) {
+                    avgSpectrum[i] += spectrum[i];
+                }
+            }
+        }
+        
+        // Average
+        for (int i = 0; i < avgSpectrum.size(); ++i) {
+            avgSpectrum[i] /= m_eegData->channelCount();
+        }
+        
+        // Create series
+        QLineSeries *series = new QLineSeries();
+        series->setName("Average Spectrum");
+        
+        double samplingRate = m_eegData->channel(0).samplingRate;
+        double freqResolution = samplingRate / (2.0 * avgSpectrum.size());
+        for (int i = 0; i < avgSpectrum.size(); ++i) {
+            double freq = i * freqResolution;
+            series->append(freq, avgSpectrum[i]);
+        }
+        
+        chart->addSeries(series);
+        
+        QValueAxis *axisX = new QValueAxis();
+        axisX->setTitleText("Frequency (Hz)");
+        axisX->setRange(0, samplingRate / 2);
+        
+        QValueAxis *axisY = new QValueAxis();
+        axisY->setTitleText("Amplitude");
+        
+        chart->addAxis(axisX, Qt::AlignBottom);
+        chart->addAxis(axisY, Qt::AlignLeft);
+        series->attachAxis(axisX);
+        series->attachAxis(axisY);
+    }
+    
+    chartView->setChart(chart);
+    layout->addWidget(chartView);
+    
+    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Close);
+    connect(buttons, &QDialogButtonBox::rejected, &spectrumDialog, &QDialog::reject);
+    layout->addWidget(buttons);
+    
+    spectrumDialog.exec();
+}
+
+void MainWindow::showBandPower(int channelIndex) {
+    if (m_eegData->isEmpty()) {
+        QMessageBox::warning(this, "Error", "No data loaded");
+        return;
+    }
+    
+    QDialog bandDialog(this);
+    bandDialog.setWindowTitle("Band Power Analysis");
+    bandDialog.resize(600, 400);
+    
+    QVBoxLayout *layout = new QVBoxLayout(&bandDialog);
+    
+    QTableWidget *table = new QTableWidget();
+    table->setColumnCount(6);
+    table->setHorizontalHeaderLabels({
+        "Channel", "Delta (0.5-4Hz)", "Theta (4-8Hz)", 
+        "Alpha (8-13Hz)", "Beta (13-30Hz)", "Gamma (30-100Hz)"
+    });
+    
+    if (channelIndex >= 0) {
+        // Single channel
+        table->setRowCount(1);
+        const EEGChannel &channel = m_eegData->channel(channelIndex);
+        auto power = SignalProcessor::calculateBandPower(channel.data, channel.samplingRate);
+        
+        table->setItem(0, 0, new QTableWidgetItem(channel.label));
+        table->setItem(0, 1, new QTableWidgetItem(QString::number(power.delta, 'e', 3)));
+        table->setItem(0, 2, new QTableWidgetItem(QString::number(power.theta, 'e', 3)));
+        table->setItem(0, 3, new QTableWidgetItem(QString::number(power.alpha, 'e', 3)));
+        table->setItem(0, 4, new QTableWidgetItem(QString::number(power.beta, 'e', 3)));
+        table->setItem(0, 5, new QTableWidgetItem(QString::number(power.gamma, 'e', 3)));
+    } else {
+        // All channels
+        table->setRowCount(m_eegData->channelCount());
+        for (int i = 0; i < m_eegData->channelCount(); ++i) {
+            const EEGChannel &channel = m_eegData->channel(i);
+            auto power = SignalProcessor::calculateBandPower(channel.data, channel.samplingRate);
+            
+            table->setItem(i, 0, new QTableWidgetItem(channel.label));
+            table->setItem(i, 1, new QTableWidgetItem(QString::number(power.delta, 'e', 3)));
+            table->setItem(i, 2, new QTableWidgetItem(QString::number(power.theta, 'e', 3)));
+            table->setItem(i, 3, new QTableWidgetItem(QString::number(power.alpha, 'e', 3)));
+            table->setItem(i, 4, new QTableWidgetItem(QString::number(power.beta, 'e', 3)));
+            table->setItem(i, 5, new QTableWidgetItem(QString::number(power.gamma, 'e', 3)));
+        }
+    }
+    
+    table->resizeColumnsToContents();
+    layout->addWidget(table);
+    
+    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Close);
+    connect(buttons, &QDialogButtonBox::rejected, &bandDialog, &QDialog::reject);
+    layout->addWidget(buttons);
+    
+    bandDialog.exec();
+}
+
+void MainWindow::showSpectrogram(int channelIndex) {
+    // Validate channel index
+    if (channelIndex < 0 || channelIndex >= m_eegData->channelCount()) {
+        QMessageBox::warning(this, "Error", "Please select a specific channel");
+        return;
+    }
+
+    const EEGChannel &channel = m_eegData->channel(channelIndex);
+
+    // Spectrogram parameters
+    const int windowSize = 256;
+    const int hopSize = 64;
+    const double samplingRate = channel.samplingRate;
+
+    int numWindows = (channel.data.size() - windowSize) / hopSize + 1;
+    if (numWindows < 1) {
+        QMessageBox::warning(this, "Error", "Not enough data for spectrogram");
+        return;
+    }
+
+    const int numFreqBins = windowSize / 2 + 1;
+
+    // Precompute Hann window
+    QVector<double> window(windowSize);
+    for (int i = 0; i < windowSize; ++i)
+        window[i] = 0.5 * (1.0 - cos(2.0 * M_PI * i / (windowSize - 1)));
+    double windowSum = std::accumulate(window.begin(), window.end(), 0.0);
+
+    // Spectrogram data container
+    QVector<double> spectrogramData(numWindows * numFreqBins, -100.0);
+
+    // Show progress
+    QProgressDialog progress("Computing spectrogram...", "Cancel", 0, numWindows, this);
+    progress.setWindowModality(Qt::WindowModal);
+    progress.setMinimumDuration(0);
+    progress.setValue(0);
+
+    // FFTW setup
+    fftw_complex *in = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * windowSize);
+    fftw_complex *out = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * windowSize);
+    fftw_plan plan = fftw_plan_dft_1d(windowSize, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+
+    bool wasCancelled = false;
+
+    // Compute spectrogram
+    for (int win = 0; win < numWindows; ++win) {
+        if (progress.wasCanceled()) {
+            wasCancelled = true;
+            break;
+        }
+        progress.setValue(win);
+        QCoreApplication::processEvents();
+
+        int startIdx = win * hopSize;
+
+        for (int i = 0; i < windowSize; ++i) {
+            in[i][0] = channel.data[startIdx + i] * window[i];
+            in[i][1] = 0.0;
+        }
+
+        fftw_execute(plan);
+
+        for (int freq = 0; freq < numFreqBins; ++freq) {
+            double real = out[freq][0];
+            double imag = out[freq][1];
+            double power = (real * real + imag * imag) / (windowSum * windowSum);
+            spectrogramData[win * numFreqBins + freq] = (power > 1e-10) ? 10.0 * log10(power) : -100.0;
+        }
+    }
+
+    fftw_destroy_plan(plan);
+    fftw_free(in);
+    fftw_free(out);
+
+    if (wasCancelled) {
+        progress.reset();
+        return;
+    }
+
+    progress.reset();
+    QCoreApplication::processEvents();
+
+    // ===== DIALOG SETUP =====
+    QDialog *specDialog = new QDialog(this);
+    specDialog->setAttribute(Qt::WA_DeleteOnClose, true);
+    specDialog->setWindowTitle(QString("Spectrogram - Channel %1 (%2)").arg(channelIndex).arg(channel.label));
+    specDialog->resize(900, 600);
+
+    QVBoxLayout *layout = new QVBoxLayout(specDialog);
+
+    // QCustomPlot widget
+    QCustomPlot *customPlot = new QCustomPlot(specDialog);
+    layout->addWidget(customPlot);
+
+    // Create color map (heatmap)
+    QCPColorMap *colorMap = new QCPColorMap(customPlot->xAxis, customPlot->yAxis);
+    colorMap->data()->setSize(numWindows, numFreqBins); // width = time, height = frequency
+    colorMap->data()->setRange(QCPRange(0, numWindows * hopSize / samplingRate),
+                               QCPRange(0, samplingRate / 2.0));
+
+    // Fill data
+    for (int x = 0; x < numWindows; ++x) {
+        for (int y = 0; y < numFreqBins; ++y) {
+            colorMap->data()->setCell(x, y, spectrogramData[x * numFreqBins + y]);
+        }
+    }
+
+    // Color gradient (similar to your QwtLinearColorMap)
+    QCPColorGradient gradient;
+    gradient.setColorStopAt(0.0, Qt::darkBlue);
+    gradient.setColorStopAt(0.25, Qt::blue);
+    gradient.setColorStopAt(0.5, Qt::green);
+    gradient.setColorStopAt(0.75, Qt::yellow);
+    gradient.setColorStopAt(1.0, Qt::darkRed);
+    colorMap->setGradient(gradient);
+    colorMap->rescaleDataRange();
+
+    // Rescale axes
+    customPlot->rescaleAxes();
+    customPlot->xAxis->setLabel("Time (s)");
+    customPlot->yAxis->setLabel("Frequency (Hz)");
+
+    // Close button
+    QPushButton *closeButton = new QPushButton("Close", specDialog);
+    connect(closeButton, &QPushButton::clicked, specDialog, &QDialog::accept);
+    layout->addWidget(closeButton);
+
+    specDialog->show();
 }
