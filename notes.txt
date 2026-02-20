@@ -74,11 +74,7 @@ Artifact marking - Visually mark artifacts in the chart
 6. Analysis Tools
 ERP analysis - Average across trials, plot grand averages
 
-Frequency analysis - FFT, band power calculations
-
 Connectivity measures - Coherence, correlation between channels
-
-Peak detection - Automatic detection of peaks/features
 
 Export statistics - CSV export of all measurements
 
