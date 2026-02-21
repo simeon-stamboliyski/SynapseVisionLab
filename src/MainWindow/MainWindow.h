@@ -30,7 +30,6 @@ private slots:
     void onFileSaveAs();
     void onFileExit();
     
-    void onChannelSelected();
     void onVisibleChannelsChanged(const QVector<int> &channels);
     
     void onFilterApply();
@@ -47,7 +46,6 @@ private slots:
     void onOffsetScaleChanged(double value);
     
     void onShowStatistics();
-    void onShowAbout();
     
     void updateStatusBar();
     void updateChannelList();

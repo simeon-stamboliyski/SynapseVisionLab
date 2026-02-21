@@ -26,7 +26,7 @@ private slots:
 private:
     EEGData *m_originalData;
     EEGData *m_filteredData;
-    EEGData *m_tempData;  // Copy for preview
+    EEGData *m_tempData; 
     double m_notchFreq;
     
     EEGChartView *m_originalChart;

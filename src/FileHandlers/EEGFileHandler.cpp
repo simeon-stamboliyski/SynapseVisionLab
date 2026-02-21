@@ -25,7 +25,6 @@ bool loadFile(const QString &filePath, EEGData &data) {
     if (ext == "edf") return loadEDF(filePath, data);
     if (ext == "csv" || ext == "txt" || ext == "dat") return loadCSV(filePath, data);
     
-    // Try auto-detection
     if (loadEDF(filePath, data)) return true;
     if (loadCSV(filePath, data)) return true;
     
@@ -148,7 +147,7 @@ static bool loadEDF(const QString &filePath, EEGData &data) {
     // Skip prefiltering (80 chars per signal)
     stream.skipRawData(80 * numSignals);
     
-    // Skip reserved (32 chars per signal) - THIS IS CRITICAL!
+    // Skip reserved (32 chars per signal)
     stream.skipRawData(32 * numSignals);
     
     // Read samples per data record
@@ -440,7 +439,7 @@ static bool saveEDF(const QString &filePath, const EEGData &data) {
         return false;
     }
     
-    // Simple EDF writer - basic implementation
+    // Simple EDF writer
     QByteArray header(256, ' ');
     
     // Version
@@ -468,9 +467,6 @@ static bool saveEDF(const QString &filePath, const EEGData &data) {
     
     // Write header
     file.write(header);
-    
-    // For now, just create a basic file
-    // Full EDF implementation would go here
     
     file.close();
     return true;

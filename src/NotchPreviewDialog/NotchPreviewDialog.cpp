@@ -84,13 +84,12 @@ void NotchPreviewDialog::onSaveAs() {
     
     QString defaultName = QFileInfo(m_originalData->fileName()).baseName() + "_notch.csv";
     
-    // Create dialog manually instead of using static function
     QFileDialog dialog(nullptr);
     dialog.setWindowTitle("Save Filtered EEG Data");
     dialog.setAcceptMode(QFileDialog::AcceptSave);
     dialog.setNameFilter("EDF Files (*.edf);;CSV Files (*.csv);;All Files (*)");
     dialog.selectFile(defaultName);
-    dialog.setOption(QFileDialog::DontUseNativeDialog, true); // Force Qt dialog
+    dialog.setOption(QFileDialog::DontUseNativeDialog, true); 
     dialog.setModal(true);
     
     // Force it to the front

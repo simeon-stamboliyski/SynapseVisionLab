@@ -100,7 +100,6 @@ inline void bandpassFilter(QVector<double> &data, double samplingRate,
 inline void notchFilter(QVector<double> &data, double samplingRate, double notchFreq = 50.0) {
     if (data.size() < 4 || samplingRate <= 0) return;
     
-    // Simple IIR notch filter
     double w0 = 2.0 * M_PI * notchFreq / samplingRate;
     double alpha = sin(w0) / 2.0;
     double b0 = 1.0;
@@ -178,7 +177,6 @@ inline void applyAverageReference(QVector<QVector<double>> &allChannelData) {
         for (int ch = 0; ch < numChannels; ++ch) {
             double val = allChannelData[ch][s];
             
-            // More robust check
             if (std::isfinite(val)) {  // isfinite checks for both NaN and Inf
                 sum += val;
                 validChannels++;
@@ -228,7 +226,6 @@ inline int findChannelIndex(const QVector<QString> &labels, const QString &name)
     return -1;
 }
 
-// Professional bipolar montage with standard pairs
 inline void applyBipolarMontage(QVector<QVector<double>> &allChannelData,
                                 const QVector<QString> &channelLabels) {
     if (allChannelData.size() < 2) {
@@ -240,8 +237,7 @@ inline void applyBipolarMontage(QVector<QVector<double>> &allChannelData,
     
     QVector<QPair<int, int>> pairs;
     
-    // Strategy 1: Pair adjacent channels by numeric suffix
-    // This works for channels like F3, F4, C3, C4, P3, P4, O1, O2, etc.
+    // Pair adjacent channels by numeric suffix
     QMap<QString, QVector<int>> channelGroups;
     
     for (int i = 0; i < channelLabels.size(); ++i) {

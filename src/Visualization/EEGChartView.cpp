@@ -273,7 +273,6 @@ void EEGChartView::wheelEvent(QWheelEvent *event) {
     // Shift + scroll down	Squeeze channels together
     // Scroll with no data	Nothing
 
-    // Get zoom direction (positive = zoom in, negative = zoom out)
     int delta = event->angleDelta().y();
     if (delta == 0) return; // Ignore horizontal scrolling
     

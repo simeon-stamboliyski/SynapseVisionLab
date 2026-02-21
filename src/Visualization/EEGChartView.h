@@ -72,4 +72,4 @@ private:
     bool m_isPanning;
     bool m_isZooming;
 };
-#endif // EEGCHARTVIEW_H
+#endif

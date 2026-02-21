@@ -254,7 +254,7 @@ void MainWindow::createDockWidgets() {
 
     // Create a scroll area
     QScrollArea *scrollArea = new QScrollArea();
-    scrollArea->setWidgetResizable(true);  // Critical!
+    scrollArea->setWidgetResizable(true); 
     scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     
@@ -364,7 +364,7 @@ void MainWindow::createDockWidgets() {
     QGroupBox *notchGroup = new QGroupBox("Notch Filter");
     QFormLayout *notchLayout = new QFormLayout(notchGroup);
 
-    // Frequency selection combo box instead of spin box
+    // Frequency selection combo box
     m_notchFreqCombo = new QComboBox();
     m_notchFreqCombo->addItem("50 Hz (Europe/Asia)", 50);
     m_notchFreqCombo->addItem("60 Hz (North America)", 60);
@@ -483,7 +483,7 @@ void MainWindow::createDockWidgets() {
         freqChannelCombo->addItem(QString("%1: %2").arg(i).arg(channel.label), i);
     }
 
-    // Window size for FFT - ADD ALL OPTIONS HERE
+    // Window size for FFT
     QComboBox *windowSizeCombo = new QComboBox();
     windowSizeCombo->addItem("256 samples", 256);
     windowSizeCombo->addItem("512 samples", 512);
@@ -519,9 +519,6 @@ void MainWindow::createDockWidgets() {
     freqLayout->addRow(spectrogramBtn);
 
     procLayout->addWidget(freqGroup);
-
-    // Store combo boxes as member variables if needed for later access
-    // For now, capture them in lambdas
 
     // Connect buttons
     connect(powerSpectrumBtn, &QPushButton::clicked, [this, freqChannelCombo, windowSizeCombo]() {
@@ -794,7 +791,6 @@ void MainWindow::onNotchFilterApply() {
         m_progressBar->setValue((i + 1) * 50 / m_eegData->channelCount());
     }
     
-    // Apply notch filter to all channels or selected channel?
     int channel = m_channelSelectSpin->value();
     if (channel >= 0) {
         filteredData->applyNotchFilter(channel, notchFreq);
@@ -884,7 +880,7 @@ void MainWindow::onShowStatistics() {
     
     // Add more columns for min/max
     QTableWidget *table = new QTableWidget();
-    table->setColumnCount(10);  // Increased from 8
+    table->setColumnCount(10); 
     table->setHorizontalHeaderLabels({
         "Channel", "Label", "Samples", "Rate (Hz)", 
         "Mean (μV)", "StdDev (μV)", "Min (μV)", "Max (μV)",
@@ -926,24 +922,6 @@ void MainWindow::onShowStatistics() {
     layout->addWidget(buttons);
     
     statsDialog.exec();
-}
-
-void MainWindow::onShowAbout() {
-    QMessageBox::about(this, "About EEG Data Processor",
-        "<h3>EEG Data Processor</h3>"
-        "<p>Version 1.0.0</p>"
-        "<p>A comprehensive application for viewing and processing "
-        "electroencephalography (EEG) data.</p>"
-        "<p>Features include:</p>"
-        "<ul>"
-        "<li>Load and save EDF/CSV files</li>"
-        "<li>Multi-channel EEG visualization</li>"
-        "<li>Signal processing filters (bandpass, notch, etc.)</li>"
-        "<li>Gain, offset, and normalization</li>"
-        "<li>EEG montage support</li>"
-        "<li>Interactive chart navigation</li>"
-        "</ul>"
-        "<p>© 2024 NeuroLab Research</p>");
 }
 
 void MainWindow::updateStatusBar() {
@@ -990,11 +968,6 @@ void MainWindow::updateChannelList() {
 
 void MainWindow::onFileExit() {
     close(); 
-}
-
-void MainWindow::onChannelSelected() {
-    // For now, empty implementation:
-    Q_UNUSED(this);
 }
 
 void MainWindow::onChannelItemChanged(QListWidgetItem *item) {
@@ -1312,7 +1285,7 @@ void MainWindow::showSpectrogram(int channelIndex) {
         }
     }
 
-    // Color gradient (similar to your QwtLinearColorMap)
+    // Color gradient
     QCPColorGradient gradient;
     gradient.setColorStopAt(0.0, Qt::darkBlue);
     gradient.setColorStopAt(0.25, Qt::blue);
