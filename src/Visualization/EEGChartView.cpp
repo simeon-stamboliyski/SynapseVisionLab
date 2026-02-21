@@ -154,8 +154,8 @@ void EEGChartView::updateChart() {
         int channelIndex = m_visibleChannels[i];
         
         // Bounds check
-        if (channelIndex < 0 || channelIndex >= channelCount) {
-            qWarning() << "Invalid channel index:" << channelIndex << "(max:" << channelCount - 1 << ")";
+        if (channelIndex < 0 || channelIndex >= m_eegData->channelCount()) {
+            qWarning() << "Skipping invalid channel index:" << channelIndex;
             continue;
         }
         

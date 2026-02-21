@@ -135,7 +135,9 @@ public:
         for (const auto &ch : m_channels) {
             allData.append(ch.data);
             labels.append(ch.label);
+            samplingRates.append(ch.samplingRate);
         }
+
         
         // Apply montage
         SignalProcessor::applyMontage(allData, labels, montage);
@@ -146,10 +148,11 @@ public:
             EEGChannel ch;
             ch.data = allData[i];
             ch.label = labels[i];
-            ch.samplingRate = samplingRates[i];
+            ch.samplingRate = samplingRates[i % samplingRates.size()]; 
             m_channels.append(ch);
         }
         emit dataChanged();
+        emit channelCountChanged(m_channels.size());
     }
 
     void applyNotchFilter(int channelIndex, double notchFreq);
@@ -157,6 +160,7 @@ signals:
     void dataChanged();
     void channelAdded(int index);
     void channelRemoved(int index);
+    void channelCountChanged(int newCount);
 
 private:
     QVector<EEGChannel> m_channels;

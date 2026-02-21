@@ -153,29 +153,68 @@ inline double maxValue(const QVector<double> &data) {
 }
 
 // ================== MONTAGES ==================
-
 inline void applyAverageReference(QVector<QVector<double>> &allChannelData) {
-    if (allChannelData.isEmpty()) return;
+    if (allChannelData.isEmpty()) {
+        qWarning() << "Average Reference: No data";
+        return;
+    }
     
     int numSamples = allChannelData[0].size();
     int numChannels = allChannelData.size();
     
-    // Safer manual implementation instead of Eigen
+    if (numChannels == 0 || numSamples == 0) {
+        qWarning() << "Average Reference: Invalid dimensions";
+        return;
+    }
+    
     QVector<double> average(numSamples, 0.0);
     
     // Compute average at each time point
     for (int s = 0; s < numSamples; ++s) {
         double sum = 0.0;
+        int validChannels = 0;
+        bool hasValidData = false;
+        
         for (int ch = 0; ch < numChannels; ++ch) {
-            sum += allChannelData[ch][s];
+            double val = allChannelData[ch][s];
+            
+            // More robust check
+            if (std::isfinite(val)) {  // isfinite checks for both NaN and Inf
+                sum += val;
+                validChannels++;
+                hasValidData = true;
+            } else {
+                // Replace invalid value with 0 to prevent propagation
+                allChannelData[ch][s] = 0.0;
+            }
         }
-        average[s] = sum / numChannels;
+        
+        if (validChannels > 0 && hasValidData) {
+            average[s] = sum / validChannels;
+        } else {
+            average[s] = 0.0;
+        }
+        
+        // Ensure average itself is valid
+        if (!std::isfinite(average[s])) {
+            average[s] = 0.0;
+        }
     }
     
     // Subtract average from each channel
     for (int ch = 0; ch < numChannels; ++ch) {
         for (int s = 0; s < numSamples; ++s) {
-            allChannelData[ch][s] -= average[s];
+            double original = allChannelData[ch][s];
+            double result = original - average[s];
+            
+            // Check if result is valid
+            if (std::isfinite(result)) {
+                allChannelData[ch][s] = result;
+            } else {
+                qDebug() << "NaN detected in channel" << ch << "at sample" << s 
+                         << "original:" << original << "avg:" << average[s];
+                allChannelData[ch][s] = 0.0;
+            }
         }
     }
 }
@@ -192,78 +231,179 @@ inline int findChannelIndex(const QVector<QString> &labels, const QString &name)
 // Professional bipolar montage with standard pairs
 inline void applyBipolarMontage(QVector<QVector<double>> &allChannelData,
                                 const QVector<QString> &channelLabels) {
-    if (allChannelData.size() < 2) return;
+    if (allChannelData.size() < 2) {
+        qWarning() << "Bipolar Montage: Need at least 2 channels, have" << allChannelData.size();
+        return;
+    }
     
-    // Standard bipolar pairs for 10-20 system
+    qDebug() << "Generating bipolar pairs from" << channelLabels.size() << "channels";
+    
     QVector<QPair<int, int>> pairs;
     
-    // Left hemisphere
-    pairs.append({findChannelIndex(channelLabels, "Fp1"), findChannelIndex(channelLabels, "F7")});
-    pairs.append({findChannelIndex(channelLabels, "F7"), findChannelIndex(channelLabels, "T3")});
-    pairs.append({findChannelIndex(channelLabels, "T3"), findChannelIndex(channelLabels, "T5")});
-    pairs.append({findChannelIndex(channelLabels, "T5"), findChannelIndex(channelLabels, "O1")});
+    // Strategy 1: Pair adjacent channels by numeric suffix
+    // This works for channels like F3, F4, C3, C4, P3, P4, O1, O2, etc.
+    QMap<QString, QVector<int>> channelGroups;
     
-    // Right hemisphere
-    pairs.append({findChannelIndex(channelLabels, "Fp2"), findChannelIndex(channelLabels, "F8")});
-    pairs.append({findChannelIndex(channelLabels, "F8"), findChannelIndex(channelLabels, "T4")});
-    pairs.append({findChannelIndex(channelLabels, "T4"), findChannelIndex(channelLabels, "T6")});
-    pairs.append({findChannelIndex(channelLabels, "T6"), findChannelIndex(channelLabels, "O2")});
+    for (int i = 0; i < channelLabels.size(); ++i) {
+        QString label = channelLabels[i];
+        
+        // Extract base name (remove numbers)
+        QString baseName = label;
+        while (!baseName.isEmpty() && baseName.back().isDigit()) {
+            baseName.chop(1);
+        }
+        
+        channelGroups[baseName].append(i);
+    }
     
-    // Midline
-    pairs.append({findChannelIndex(channelLabels, "Fz"), findChannelIndex(channelLabels, "Cz")});
-    pairs.append({findChannelIndex(channelLabels, "Cz"), findChannelIndex(channelLabels, "Pz")});
+    // Pair channels within the same group (e.g., F3 with F4, C3 with C4)
+    for (const auto &group : channelGroups) {
+        const QVector<int> &indices = group;
+        
+        // Pair odd/even numbered channels
+        QVector<int> left, right;
+        for (int idx : indices) {
+            QString label = channelLabels[idx];
+            if (label.contains('3') || label.contains('1') || label.contains('5') || 
+                label.contains('7') || label.contains('9')) {
+                left.append(idx);
+            } else if (label.contains('4') || label.contains('2') || label.contains('6') || 
+                      label.contains('8') || label.contains('0')) {
+                right.append(idx);
+            }
+        }
+        
+        // Pair left and right channels
+        for (int i = 0; i < qMin(left.size(), right.size()); ++i) {
+            pairs.append({left[i], right[i]});
+            qDebug() << "Created bipolar pair:" << channelLabels[left[i]] 
+                     << "-" << channelLabels[right[i]];
+        }
+    }
+    
+    if (pairs.isEmpty()) {
+        qDebug() << "No pattern-based pairs found, using consecutive channels";
+        for (int i = 0; i < channelLabels.size() - 1; ++i) {
+            pairs.append({i, i+1});
+            qDebug() << "Created consecutive pair:" << channelLabels[i] 
+                     << "-" << channelLabels[i+1];
+        }
+    }
+    
+    if (pairs.isEmpty()) {
+        qWarning() << "Bipolar Montage: Could not create any pairs";
+        return;
+    }
     
     // Calculate bipolar channels
     QVector<QVector<double>> bipolarData;
+    int numSamples = allChannelData[0].size();
+    
     for (const auto &pair : pairs) {
         int idx1 = pair.first;
         int idx2 = pair.second;
         
-        if (idx1 >= 0 && idx1 < allChannelData.size() &&
-            idx2 >= 0 && idx2 < allChannelData.size()) {
+        QVector<double> diff(numSamples, 0.0);
+        bool hasValidData = false;
+        
+        for (int j = 0; j < numSamples; ++j) {
+            double val1 = allChannelData[idx1][j];
+            double val2 = allChannelData[idx2][j];
             
-            QVector<double> diff(allChannelData[idx1].size());
-            for (int j = 0; j < diff.size(); ++j) {
-                diff[j] = allChannelData[idx1][j] - allChannelData[idx2][j];
+            if (std::isfinite(val1) && std::isfinite(val2)) {
+                diff[j] = val1 - val2;
+                hasValidData = true;
+            } else {
+                diff[j] = 0.0;
             }
+        }
+        
+        if (hasValidData) {
             bipolarData.append(diff);
         }
     }
     
     if (!bipolarData.isEmpty()) {
         allChannelData = bipolarData;
+        qDebug() << "Bipolar montage created" << bipolarData.size() << "channels";
+    } else {
+        qWarning() << "Bipolar Montage: No valid bipolar data generated";
     }
 }
 
 inline void applyLaplacianMontage(QVector<QVector<double>> &allChannelData) {
-    if (allChannelData.size() < 3) return;
+    if (allChannelData.size() < 3) {
+        qWarning() << "Laplacian Montage: Need at least 3 channels, have" << allChannelData.size();
+        return;
+    }
+    
+    // First, clean the input data
+    for (int ch = 0; ch < allChannelData.size(); ++ch) {
+        for (int s = 0; s < allChannelData[ch].size(); ++s) {
+            if (!std::isfinite(allChannelData[ch][s])) {
+                allChannelData[ch][s] = 0.0;
+            }
+        }
+    }
     
     QVector<QVector<double>> laplacianData = allChannelData;
     int numChannels = allChannelData.size();
     int numSamples = allChannelData[0].size();
+    int nanCount = 0;
     
     for (int s = 0; s < numSamples; ++s) {
         for (int ch = 0; ch < numChannels; ++ch) {
             double neighborSum = 0.0;
             int neighborCount = 0;
             
+            // Check left neighbor
             if (ch > 0) {
-                neighborSum += allChannelData[ch-1][s];
-                neighborCount++;
-            }
-            if (ch < numChannels - 1) {
-                neighborSum += allChannelData[ch+1][s];
-                neighborCount++;
+                double val = allChannelData[ch-1][s];
+                if (std::isfinite(val)) {
+                    neighborSum += val;
+                    neighborCount++;
+                }
             }
             
-            if (neighborCount > 0) {
-                laplacianData[ch][s] = allChannelData[ch][s] - (neighborSum / neighborCount);
+            // Check right neighbor
+            if (ch < numChannels - 1) {
+                double val = allChannelData[ch+1][s];
+                if (std::isfinite(val)) {
+                    neighborSum += val;
+                    neighborCount++;
+                }
+            }
+            
+            double currentVal = allChannelData[ch][s];
+            
+            if (neighborCount > 0 && std::isfinite(currentVal)) {
+                double neighborAvg = neighborSum / neighborCount;
+                // Ensure neighborAvg is finite
+                if (std::isfinite(neighborAvg)) {
+                    laplacianData[ch][s] = currentVal - neighborAvg;
+                } else {
+                    laplacianData[ch][s] = currentVal;
+                    nanCount++;
+                }
             } else {
-                laplacianData[ch][s] = allChannelData[ch][s];
+                laplacianData[ch][s] = std::isfinite(currentVal) ? currentVal : 0.0;
+            }
+            
+            // Final safety check
+            if (!std::isfinite(laplacianData[ch][s])) {
+                laplacianData[ch][s] = 0.0;
+                nanCount++;
             }
         }
     }
+    
     allChannelData = laplacianData;
+    
+    if (nanCount > 0) {
+        qDebug() << "Laplacian montage applied with" << nanCount << "NaN corrections";
+    } else {
+        qDebug() << "Laplacian montage applied successfully";
+    }
 }
 
 enum MontageType {
@@ -275,7 +415,21 @@ enum MontageType {
 inline void applyMontage(QVector<QVector<double>> &allChannelData, 
                         const QVector<QString> &channelLabels,
                         MontageType montage) {
-    if (allChannelData.isEmpty()) return;
+    if (allChannelData.isEmpty()) {
+        qWarning() << "Montage: No data";
+        return;
+    }
+
+    for (int ch = 0; ch < allChannelData.size(); ++ch) {
+        for (int s = 0; s < allChannelData[ch].size(); ++s) {
+            if (std::isnan(allChannelData[ch][s])) {
+                qDebug() << "NaN found in input - channel" << ch << "sample" << s;
+                allChannelData[ch][s] = 0.0; 
+            }
+        }
+    }
+    
+    qDebug() << "Applying montage type:" << montage;
     
     switch (montage) {
         case MontageAverageReference:
@@ -287,6 +441,15 @@ inline void applyMontage(QVector<QVector<double>> &allChannelData,
         case MontageLaplacian:
             applyLaplacianMontage(allChannelData);
             break;
+        default:
+            qWarning() << "Unknown montage type";
+            return;
+    }
+    
+    // Final validation
+    if (!allChannelData.isEmpty()) {
+        qDebug() << "Montage complete. Channels:" << allChannelData.size() 
+                 << "Samples:" << allChannelData[0].size();
     }
 }
 

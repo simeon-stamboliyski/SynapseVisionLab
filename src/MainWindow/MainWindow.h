@@ -40,7 +40,8 @@ private slots:
     void onDCRemoveApply();
     void onNotchFilterApply();
     void onMontageApply();
-    
+    void onResetMontage();
+
     void onTimeRangeChanged(double start, double duration);
     void onVerticalScaleChanged(double value);
     void onOffsetScaleChanged(double value);
@@ -54,6 +55,9 @@ private slots:
     void showPowerSpectrum(int channelIndex, int windowSizeIndex);
     void showBandPower(int channelIndex);
     void showSpectrogram(int channelIndex);
+
+signals:
+    void channelCountChanged(int newCount);
     
 private:
     void createActions();

@@ -41,6 +41,20 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_eegData, &EEGData::dataChanged, this, &MainWindow::updateChannelList);
     connect(m_eegData, &EEGData::channelAdded, this, &MainWindow::updateChannelList);
     connect(m_eegData, &EEGData::channelRemoved, this, &MainWindow::updateChannelList);
+    connect(m_eegData, &EEGData::channelCountChanged, [this](int newCount) {
+        // Update channel list
+        updateChannelList();
+        
+        // Reset visible channels to all available channels
+        QVector<int> allChannels;
+        for (int i = 0; i < newCount; ++i) {
+            allChannels.append(i);
+        }
+        m_chartView->setVisibleChannels(allChannels);
+        
+        // Update spin box range
+        m_channelSelectSpin->setRange(-1, newCount - 1);
+    });
 
     connect(m_chartView, &EEGChartView::visibleChannelsChanged,
             this, &MainWindow::onVisibleChannelsChanged);
@@ -375,8 +389,12 @@ void MainWindow::createDockWidgets() {
     QPushButton *montageButton = new QPushButton("Apply Montage");
     connect(montageButton, &QPushButton::clicked, this, &MainWindow::onMontageApply);
     
+    QPushButton *montageButton1 = new QPushButton("Reset Montage");
+    connect(montageButton1, &QPushButton::clicked, this, &MainWindow::onResetMontage);
+    
     montageLayout->addRow("Type:", m_montageCombo);
     montageLayout->addRow(montageButton);
+    montageLayout->addRow(montageButton1);
     
     procLayout->addWidget(montageGroup);
     
@@ -821,6 +839,23 @@ void MainWindow::onMontageApply() {
     m_chartView->updateChart();
     updateChannelList();
 }
+
+void MainWindow::onResetMontage() {
+    if (!m_currentFilePath.isEmpty()) {
+        m_eegData->loadFromFile(m_currentFilePath);
+
+        m_chartView->selectAllChannels();
+
+        m_chartView->updateChart();
+        updateChannelList();
+        updateStatusBar();
+        
+        QMessageBox::information(this, "Reset", "Data restored to original");
+    } else {
+        QMessageBox::warning(this, "Error", "No original file to restore from");
+    }
+}
+
 
 void MainWindow::onTimeRangeChanged(double start, double duration) {
     m_timeStartSpin->setValue(start);
